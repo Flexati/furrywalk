@@ -1,0 +1,165 @@
+{
+  "context_tag": "@playstore-app-grouth-master",
+  "pricing_model": "freemium_ads_plus_subscription",
+  "tiers": [
+    {
+      "id": "free_with_ads",
+      "price_monthly_eur": null,
+      "price_yearly_eur": null,
+      "discount_pct": 0,
+      "features_included": [
+        "1 dog profile",
+        "GPS walk tracking with photo before/after",
+        "Online maps (streaming tiles)",
+        "Basic health reminders (vaccines, antiparasitic, grooming)",
+        "Community walks read-only view",
+        "Walk history (last 30 days)",
+        "Basic stats (distance, duration, calories)"
+      ],
+      "ad_configuration": {
+        "banner": true,
+        "interstitial": false,
+        "rewarded": true,
+        "frequency_cap": 3,
+        "eCPM_target": 3.5
+      },
+      "psychological_triggers": [
+        "Loss aversion: 'Your 7-day streak is at risk — unlock streak saver with Pro'",
+        "Social proof: '2,300+ Pro users unlocked offline maps this week'",
+        "Progress barrier: 'Add a second dog profile to compare stats'",
+        "Scarcity: '3 free vet tele-consult credits — Pro members get 10/mo'",
+        "Feature gating: Blurred advanced stats with 'Unlock with Pro' overlay"
+      ],
+      "compliance_notes": [
+        "IAB TCF 2.2 consent banner shown before any ad SDK initialization",
+        "iOS ATT prompt before IDFA access for ad attribution",
+        "GDPR Art. 6(1)(a) consent for personalized ads; Art. 6(1)(f) for legitimate interest fallback",
+        "Italian Garante cookie/ad consent guidelines: granular per-purpose toggles",
+        "Google Play Billing Policy 4.4: Free tier uses ad monetization, no digital goods sold outside Play Billing",
+        "Rewarded ad must show clear 'watch ad to unlock' label with skip option after 5s"
+      ]
+    },
+    {
+      "id": "pro_ad_free",
+      "price_monthly_eur": 3.99,
+      "price_yearly_eur": 2.99,
+      "discount_pct": 25,
+      "features_included": [
+        "All Free features",
+        "Zero ads (banners, rewarded, all removed)",
+        "Unlimited dog profiles (up to 5)",
+        "Offline maps with full tile caching",
+        "Advanced health analytics (weekly/monthly trends, breed comparison, energy correlation)",
+        "Vet tele-consult credits (3/month)",
+        "Unlimited walk history with export (CSV/PDF)",
+        "Priority GPS accuracy mode (1s update interval)",
+        "Custom route creation and sharing",
+        "Early access to new features"
+      ],
+      "ad_configuration": {
+        "banner": false,
+        "interstitial": false,
+        "rewarded": false,
+        "frequency_cap": 0,
+        "eCPM_target": 0
+      },
+      "psychological_triggers": [
+        "Ad fatigue: 'You've seen 47 ads this month. Go ad-free for €3.99'",
+        "Value stacking: '€3.99 = 3 vet consults (€45 value) + offline maps + ad-free'",
+        "Free trial momentum: '7 days free — cancel anytime, keep your walk data'",
+        "Social identity: 'Join 12,000+ Pro walkers in your area'",
+        "FOMO: 'Your breed's health trend report is ready — Pro only'"
+      ],
+      "compliance_notes": [
+        "Google Play Billing Policy 4.4: Subscription sold exclusively through Google Play Billing",
+        "Apple App Store 3.1.2: Subscription sold through Apple IAP only",
+        "Lemon Squeezy used for web/desktop upsell and B2B partner subscriptions (external to app store)",
+        "EU Digital Services Act: Clear pricing, auto-renewal disclosure, cancellation link in account settings",
+        "Right of withdrawal: 14-day EU cooling-off period honored for web purchases",
+        "Receipt generation: LS auto-generates VAT-compliant invoices for EU customers"
+      ]
+    },
+    {
+      "id": "pro_family",
+      "price_monthly_eur": 6.99,
+      "price_yearly_eur": 5.49,
+      "discount_pct": 21,
+      "features_included": [
+        "All Pro features",
+        "Unlimited dog profiles (no cap)",
+        "Family sharing: up to 4 household members, each with own login",
+        "Shared family calendar for walks, vet appointments, grooming",
+        "Multi-walker live tracking (see family member's active walk on map)",
+        "Family leaderboard & weekly challenges",
+        "Priority support (live chat, <4h response)",
+        "Custom breed-specific health alerts",
+        "Annual vet checkup summary report (PDF)"
+      ],
+      "ad_configuration": {
+        "banner": false,
+        "interstitial": false,
+        "rewarded": false,
+        "frequency_cap": 0,
+        "eCPM_target": 0
+      },
+      "psychological_triggers": [
+        "Family unity: 'Coordinate walks so your dogs are never alone'",
+        "Savings anchor: '€6.99 family vs €15.96 for 4 individual Pro accounts'",
+        "Safety: 'See where your partner is walking the dog right now'",
+        "Gamification: 'Win this week's family step challenge'",
+        "Care responsibility: 'Never miss a vet appointment with shared reminders'"
+      ],
+      "compliance_notes": [
+        "GDPR Art. 9: Health data (vet records) shared within family requires explicit consent from each member",
+        "Italian Garante: Family sharing implies data co-controllership — documented in privacy policy",
+        "COPPA: No under-16 data collection without parental consent for family accounts",
+        "Google Play Billing Policy 4.4: Family plan sold through Google Play Billing",
+        "Apple Family Sharing integration: Use Apple's native Family Sharing framework where possible",
+        "Right to data portability: Each family member can export their own data independently"
+      ]
+    }
+  ],
+  "payment_processor": "lemon_squeezy",
+  "checkout_flow": "Mobile: User taps upgrade → Zustand store sets pendingTier → expo-web-browser opens LS hosted checkout URL with variant_id, checkout[email], checkout[embed]=false → User completes payment in LS overlay → LS redirects to app via expo-linking deep link (passeggiatafurba://subscription/confirm) → Client calls tRPC subscription.sync → Server validates via LS API GET /v1/subscriptions/{id} → DB upsert → Client receives subscription status → Paywall dismisses. Web fallback: Same flow but redirect to web app URL. On payment failure: LS retries up to 4 times over 14 days → webhook order_refunded or subscription_expired triggers ad-tier downgrade.",
+  "tax_compliance": {
+    "vat_mooss": true,
+    "local_rates": true,
+    "invoice_generation": true
+  },
+  "monetization_addons": [
+    {
+      "name": "AdMob Banner + Rewarded",
+      "type": "ad_network",
+      "conversion_target_pct": 2.5
+    },
+    {
+      "name": "Meta Audience Network Interstitial",
+      "type": "ad_network",
+      "conversion_target_pct": 1.8
+    },
+    {
+      "name": "Affiliate Vet Product Links",
+      "type": "affiliate",
+      "conversion_target_pct": 3.0
+    },
+    {
+      "name": "Sponsored Local Routes (B2B)",
+      "type": "sponsored_route",
+      "conversion_target_pct": 4.0
+    }
+  ],
+  "validation_checklist": [
+    "Verify LS webhook HMAC-SHA256 signature on every event",
+    "Confirm idempotency: deduplicate webhook events by ls_event_id",
+    "Test subscription lifecycle: created → active → past_due → cancelled → expired",
+    "Validate ad SDK only initializes after IAB TCF 2.2 consent obtained",
+    "Ensure rewarded ad frequency cap (every 3 routes) is enforced server-side",
+    "Test checkout flow on iOS (Safari WebBrowser), Android (Chrome Custom Tab), and Web",
+    "Verify VAT calculation for EU customers with different rates (IT 22%, DE 19%, etc.)",
+    "Confirm Google Play Billing Policy 4.4: No external payment links in Play-distributed APK",
+    "Validate ATT prompt appears before any ad tracking on iOS",
+    "Test downgrade path: Pro → Free restores ad config within 5 minutes",
+    "Ensure subscription management deep link works (Settings → Manage Subscription)",
+    "Verify family sharing: each member gets independent auth, pooled subscription"
+  ]
+}
