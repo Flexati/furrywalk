@@ -1,124 +1,148 @@
-import { ScrollView, Text, View, TouchableOpacity } from "react-native";
+import { ScrollView, Text, View, TouchableOpacity, TextInput, Image } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { Storage, type WalkRecord } from "@/lib/services/storage";
+import { LeafletMap, type MapPoint } from "@/components/leaflet-map";
 
 export default function WalkSummaryScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const [rating, setRating] = useState(0);
   const [notes, setNotes] = useState("");
+  const [saved, setSaved] = useState(false);
 
-  const distance = parseFloat(params.distance as string) || 0;
-  const time = parseInt(params.time as string) || 0;
-  const photos = params.photos ? JSON.parse(params.photos as string) : { before: false, after: false };
+  const distance = parseFloat((params.distance as string) || "0") || 0;
+  const time = parseInt((params.time as string) || "0") || 0;
+  const calories = parseInt((params.calories as string) || "0") || 0;
+  const startedAt = parseInt((params.startedAt as string) || "0") || Date.now();
+  const endedAt = parseInt((params.endedAt as string) || "0") || Date.now();
+  const photoBefore = (params.photoBefore as string) || "";
+  const photoAfter = (params.photoAfter as string) || "";
 
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}m ${secs}s`;
+  const path = useMemo<MapPoint[]>(() => {
+    try {
+      const raw = (params.path as string) || "[]";
+      const arr = JSON.parse(raw);
+      if (!Array.isArray(arr)) return [];
+      return arr.map((p: any) => ({ latitude: p.latitude, longitude: p.longitude }));
+    } catch {
+      return [];
+    }
+  }, [params.path]);
+
+  const formatTime = (sec: number) => {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}m ${s}s`;
   };
 
-  const handleSave = () => {
-    // Save walk data to AsyncStorage
-    const walkData = {
+  const handleSave = async () => {
+    let pathArr: WalkRecord["path"] = [];
+    try {
+      pathArr = JSON.parse((params.path as string) || "[]");
+    } catch {}
+    const record: WalkRecord = {
       id: Date.now(),
-      distance,
-      time,
-      rating,
+      startedAt,
+      endedAt,
+      distanceKm: distance,
+      durationSec: time,
+      caloriesKcal: calories,
+      rating: rating || 5,
       notes,
-      photos,
-      timestamp: new Date().toISOString(),
+      photos: { before: photoBefore || undefined, after: photoAfter || undefined },
+      path: pathArr,
     };
-    console.log("Saving walk:", walkData);
+    await Storage.addWalk(record);
+    setSaved(true);
     router.replace("/(tabs)");
   };
 
   return (
-    <ScreenContainer className="p-6">
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View className="flex-1 gap-6">
-          {/* Header */}
-          <View className="items-center gap-2">
-            <Text className="text-5xl">🎉</Text>
-            <Text className="text-3xl font-bold text-foreground">Passeggiata completata!</Text>
-            <Text className="text-sm text-muted">Fantastico lavoro!</Text>
-          </View>
-
-          {/* Stats Summary */}
-          <View className="bg-surface rounded-2xl p-6 border border-border gap-4">
-            <View className="flex-row justify-between">
-              <View className="flex-1 items-center">
-                <Text className="text-xs text-muted mb-2">Distanza</Text>
-                <Text className="text-3xl font-bold text-primary">{distance.toFixed(2)}</Text>
-                <Text className="text-xs text-muted">km</Text>
-              </View>
-              <View className="w-px bg-border" />
-              <View className="flex-1 items-center">
-                <Text className="text-xs text-muted mb-2">Tempo</Text>
-                <Text className="text-3xl font-bold text-primary">{formatTime(time)}</Text>
-              </View>
-              <View className="w-px bg-border" />
-              <View className="flex-1 items-center">
-                <Text className="text-xs text-muted mb-2">Calorie</Text>
-                <Text className="text-3xl font-bold text-primary">{Math.round(distance * 50)}</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Photos Status */}
-          <View className="bg-surface rounded-2xl p-4 border border-border gap-3">
-            <Text className="font-semibold text-foreground">Foto del cane</Text>
-            <View className="flex-row gap-3">
-              <View className="flex-1 items-center p-3 bg-background rounded-lg">
-                <Text className="text-2xl mb-1">{photos.before ? "📸" : "❌"}</Text>
-                <Text className="text-xs text-muted">Prima</Text>
-              </View>
-              <View className="flex-1 items-center p-3 bg-background rounded-lg">
-                <Text className="text-2xl mb-1">{photos.after ? "📸" : "❌"}</Text>
-                <Text className="text-xs text-muted">Dopo</Text>
-              </View>
-            </View>
-          </View>
-
-          {/* Rating */}
-          <View className="bg-surface rounded-2xl p-4 border border-border gap-3">
-            <Text className="font-semibold text-foreground">Come è stata la passeggiata?</Text>
-            <View className="flex-row justify-center gap-2">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <TouchableOpacity
-                  key={star}
-                  onPress={() => setRating(star)}
-                  className="active:opacity-80"
-                >
-                  <Text className="text-3xl">{star <= rating ? "⭐" : "☆"}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          </View>
-
-          {/* Stats Card */}
-          <View className="bg-primary/10 rounded-2xl p-4 border border-primary gap-2">
-            <Text className="text-sm font-semibold text-primary">📊 Statistiche aggiornate</Text>
-            <Text className="text-xs text-foreground">
-              Hai completato {distance.toFixed(1)} km in questa passeggiata. Continua così! 🐕
+    <ScreenContainer className="p-4">
+      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}>
+        <View className="flex-1 gap-4">
+          <View className="px-2 pt-2">
+            <Text className="text-3xl font-bold text-foreground">Riepilogo</Text>
+            <Text className="text-sm text-muted">
+              {new Date(startedAt).toLocaleString("it-IT")}
             </Text>
           </View>
 
-          {/* Buttons */}
-          <View className="gap-3 mt-6">
-            <TouchableOpacity
-              onPress={handleSave}
-              className="bg-primary rounded-full py-3 items-center active:opacity-80"
-            >
-              <Text className="text-white font-semibold">Salva Passeggiata</Text>
-            </TouchableOpacity>
+          {path.length > 1 && (
+            <View className="rounded-2xl overflow-hidden mx-2" style={{ height: 220 }}>
+              <LeafletMap polyline={path} followPolyline center={path[0]} zoom={15} />
+            </View>
+          )}
 
+          <View className="bg-surface rounded-2xl p-5 border border-border mx-2">
+            <View className="flex-row justify-between">
+              <View className="items-center flex-1">
+                <Text className="text-xs text-muted">Distanza</Text>
+                <Text className="text-2xl font-bold text-primary">{distance.toFixed(2)} km</Text>
+              </View>
+              <View className="items-center flex-1">
+                <Text className="text-xs text-muted">Tempo</Text>
+                <Text className="text-2xl font-bold text-primary">{formatTime(time)}</Text>
+              </View>
+              <View className="items-center flex-1">
+                <Text className="text-xs text-muted">Calorie</Text>
+                <Text className="text-2xl font-bold text-primary">{calories}</Text>
+              </View>
+            </View>
+          </View>
+
+          {(photoBefore || photoAfter) && (
+            <View className="flex-row gap-3 mx-2">
+              {photoBefore ? (
+                <Image
+                  source={{ uri: photoBefore }}
+                  style={{ flex: 1, height: 120, borderRadius: 16 }}
+                />
+              ) : null}
+              {photoAfter ? (
+                <Image
+                  source={{ uri: photoAfter }}
+                  style={{ flex: 1, height: 120, borderRadius: 16 }}
+                />
+              ) : null}
+            </View>
+          )}
+
+          <View className="bg-surface rounded-2xl p-5 border border-border mx-2 gap-3">
+            <Text className="font-semibold text-foreground">Com'è andata?</Text>
+            <View className="flex-row gap-2 justify-center">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <TouchableOpacity key={n} onPress={() => setRating(n)}>
+                  <Text className="text-3xl">{n <= rating ? "⭐" : "☆"}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TextInput
+              value={notes}
+              onChangeText={setNotes}
+              placeholder="Note (opzionale)"
+              multiline
+              className="bg-background border border-border rounded-2xl p-3 text-foreground"
+              style={{ minHeight: 80 }}
+              placeholderTextColor="#999"
+            />
+          </View>
+
+          <View className="gap-3 mx-2">
+            <TouchableOpacity
+              disabled={saved}
+              onPress={handleSave}
+              className="bg-primary rounded-full py-4 items-center active:opacity-90"
+            >
+              <Text className="text-white font-bold">{saved ? "Salvata ✓" : "Salva passeggiata"}</Text>
+            </TouchableOpacity>
             <TouchableOpacity
               onPress={() => router.replace("/(tabs)")}
-              className="bg-surface border border-border rounded-full py-3 items-center active:opacity-80"
+              className="rounded-full py-3 items-center border border-border"
             >
-              <Text className="text-foreground font-semibold">Torna a Home</Text>
+              <Text className="text-foreground font-semibold">Scarta</Text>
             </TouchableOpacity>
           </View>
         </View>

@@ -1,173 +1,175 @@
-import { ScrollView, Text, View, TouchableOpacity, TextInput } from "react-native";
+import { ScrollView, Text, View, TouchableOpacity, TextInput, Alert } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
 import { useState } from "react";
 import { useRouter } from "expo-router";
+import * as Location from "expo-location";
+import { Storage } from "@/lib/services/storage";
+
+type Step = "welcome" | "dog-setup" | "location";
 
 export default function OnboardingScreen() {
   const router = useRouter();
-  const [step, setStep] = useState<"welcome" | "dog-setup" | "location">("welcome");
+  const [step, setStep] = useState<Step>("welcome");
   const [dogName, setDogName] = useState("");
   const [dogBreed, setDogBreed] = useState("");
   const [dogAge, setDogAge] = useState("");
   const [dogEnergy, setDogEnergy] = useState<"bassa" | "media" | "alta">("media");
+  const [busy, setBusy] = useState(false);
 
-  const handleNext = () => {
-    if (step === "welcome") {
-      setStep("dog-setup");
-    } else if (step === "dog-setup") {
-      setStep("location");
-    } else {
-      // Complete onboarding
+  const finishOnboarding = async () => {
+    setBusy(true);
+    try {
+      await Storage.setDogProfile({
+        name: dogName.trim() || "Il mio cane",
+        breed: dogBreed.trim() || "Meticcio",
+        age: dogAge.trim() || "—",
+        energy: dogEnergy,
+        avatarEmoji: "🐶",
+      });
+      await Storage.setOnboardingDone(true);
       router.replace("/(tabs)");
+    } finally {
+      setBusy(false);
     }
   };
 
-  const handleSkip = () => {
-    router.replace("/(tabs)");
+  const handleLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        Alert.alert(
+          "Permesso negato",
+          "Senza la posizione non potrai usare il tracker. Puoi attivarla più tardi nelle impostazioni del telefono."
+        );
+      }
+    } catch (e) {
+      console.warn("[onboarding] location request failed", e);
+    }
+    await finishOnboarding();
+  };
+
+  const handleNext = () => {
+    if (step === "welcome") setStep("dog-setup");
+    else if (step === "dog-setup") setStep("location");
   };
 
   return (
     <ScreenContainer className="p-6">
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        <View className="flex-1 justify-between">
-          {/* Welcome Step */}
+        <View className="flex-1 gap-6 justify-center">
           {step === "welcome" && (
-            <View className="flex-1 justify-center gap-6">
-              <View className="items-center gap-4">
-                <Text className="text-6xl">🐕</Text>
-                <Text className="text-4xl font-bold text-foreground text-center">
-                  Passeggiata Furba
-                </Text>
-                <Text className="text-lg text-muted text-center">
-                  Scopri i migliori percorsi per il tuo cane
-                </Text>
-              </View>
-
-              <View className="bg-surface rounded-2xl p-6 border border-border gap-3">
-                <Text className="text-base font-semibold text-foreground mb-2">
-                  Cosa ti aspetta:
-                </Text>
-                <View className="gap-2">
-                  <Text className="text-sm text-muted">🗺️ Mappe personalizzate per il tuo cane</Text>
-                  <Text className="text-sm text-muted">📊 Tracker passeggiate con statistiche</Text>
-                  <Text className="text-sm text-muted">🏥 Reminder vaccini e salute</Text>
-                  <Text className="text-sm text-muted">👥 Community e condivisione percorsi</Text>
-                </View>
-              </View>
+            <View className="gap-6 items-center">
+              <Text className="text-7xl">🐕</Text>
+              <Text className="text-3xl font-bold text-primary text-center">
+                Benvenuto in Passeggiata Furba
+              </Text>
+              <Text className="text-base text-muted text-center">
+                Trova le passeggiate più belle, traccia i percorsi GPS e prenditi cura del tuo amico
+                a quattro zampe.
+              </Text>
+              <TouchableOpacity
+                onPress={handleNext}
+                className="bg-primary rounded-full py-4 px-12 active:opacity-90"
+              >
+                <Text className="text-white font-bold text-base">Iniziamo</Text>
+              </TouchableOpacity>
             </View>
           )}
 
-          {/* Dog Setup Step */}
           {step === "dog-setup" && (
-            <View className="flex-1 justify-center gap-6">
-              <Text className="text-3xl font-bold text-foreground">Profilo del tuo cane</Text>
+            <View className="gap-4">
+              <Text className="text-2xl font-bold text-foreground">Parlami del tuo cane</Text>
+              <Text className="text-sm text-muted mb-2">
+                Useremo questi dati per personalizzare le passeggiate.
+              </Text>
 
-              <View className="gap-4">
-                <View>
-                  <Text className="text-sm font-semibold text-foreground mb-2">Nome</Text>
-                  <TextInput
-                    placeholder="Es. Max"
-                    value={dogName}
-                    onChangeText={setDogName}
-                    className="bg-surface border border-border rounded-lg p-3 text-foreground"
-                  />
-                </View>
+              <View>
+                <Text className="text-xs font-semibold text-foreground mb-2">NOME</Text>
+                <TextInput
+                  value={dogName}
+                  onChangeText={setDogName}
+                  placeholder="Es. Luna"
+                  className="bg-surface border border-border rounded-2xl px-4 py-3 text-foreground"
+                  placeholderTextColor="#999"
+                />
+              </View>
 
-                <View>
-                  <Text className="text-sm font-semibold text-foreground mb-2">Razza</Text>
-                  <TextInput
-                    placeholder="Es. Golden Retriever"
-                    value={dogBreed}
-                    onChangeText={setDogBreed}
-                    className="bg-surface border border-border rounded-lg p-3 text-foreground"
-                  />
-                </View>
+              <View>
+                <Text className="text-xs font-semibold text-foreground mb-2">RAZZA</Text>
+                <TextInput
+                  value={dogBreed}
+                  onChangeText={setDogBreed}
+                  placeholder="Es. Labrador"
+                  className="bg-surface border border-border rounded-2xl px-4 py-3 text-foreground"
+                  placeholderTextColor="#999"
+                />
+              </View>
 
-                <View>
-                  <Text className="text-sm font-semibold text-foreground mb-2">Età (anni)</Text>
-                  <TextInput
-                    placeholder="Es. 3"
-                    value={dogAge}
-                    onChangeText={setDogAge}
-                    keyboardType="numeric"
-                    className="bg-surface border border-border rounded-lg p-3 text-foreground"
-                  />
-                </View>
+              <View>
+                <Text className="text-xs font-semibold text-foreground mb-2">ETÀ</Text>
+                <TextInput
+                  value={dogAge}
+                  onChangeText={setDogAge}
+                  placeholder="Es. 3 anni"
+                  className="bg-surface border border-border rounded-2xl px-4 py-3 text-foreground"
+                  placeholderTextColor="#999"
+                />
+              </View>
 
-                <View>
-                  <Text className="text-sm font-semibold text-foreground mb-2">Livello energia</Text>
-                  <View className="flex-row gap-2">
-                    {(["bassa", "media", "alta"] as const).map((level) => (
-                      <TouchableOpacity
-                        key={level}
-                        onPress={() => setDogEnergy(level)}
-                        className={`flex-1 rounded-lg p-3 items-center ${
-                          dogEnergy === level ? "bg-primary" : "bg-surface border border-border"
+              <View>
+                <Text className="text-xs font-semibold text-foreground mb-2">LIVELLO ENERGIA</Text>
+                <View className="flex-row gap-2">
+                  {(["bassa", "media", "alta"] as const).map((e) => (
+                    <TouchableOpacity
+                      key={e}
+                      onPress={() => setDogEnergy(e)}
+                      className={`flex-1 rounded-full py-3 items-center border-2 ${
+                        dogEnergy === e ? "bg-primary border-primary" : "bg-surface border-border"
+                      }`}
+                    >
+                      <Text
+                        className={`font-semibold capitalize ${
+                          dogEnergy === e ? "text-white" : "text-foreground"
                         }`}
                       >
-                        <Text
-                          className={`font-semibold ${
-                            dogEnergy === level ? "text-white" : "text-foreground"
-                          }`}
-                        >
-                          {level.charAt(0).toUpperCase() + level.slice(1)}
-                        </Text>
-                      </TouchableOpacity>
-                    ))}
-                  </View>
+                        {e}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
                 </View>
               </View>
+
+              <TouchableOpacity
+                onPress={handleNext}
+                className="bg-primary rounded-full py-4 items-center mt-4 active:opacity-90"
+              >
+                <Text className="text-white font-bold">Continua</Text>
+              </TouchableOpacity>
             </View>
           )}
 
-          {/* Location Step */}
           {step === "location" && (
-            <View className="flex-1 justify-center gap-6">
-              <View className="items-center gap-4">
-                <Text className="text-5xl">📍</Text>
-                <Text className="text-3xl font-bold text-foreground text-center">
-                  Accedi alla posizione
-                </Text>
-              </View>
-
-              <View className="bg-surface rounded-2xl p-6 border border-border gap-3">
-                <Text className="text-base font-semibold text-foreground mb-2">
-                  Perché abbiamo bisogno della tua posizione:
-                </Text>
-                <View className="gap-2">
-                  <Text className="text-sm text-muted">
-                    🗺️ Mostrare percorsi vicino a te
-                  </Text>
-                  <Text className="text-sm text-muted">
-                    📍 Tracciare le tue passeggiate
-                  </Text>
-                  <Text className="text-sm text-muted">
-                    🔍 Scoprire zone sicure e aree con altri cani
-                  </Text>
-                </View>
-              </View>
-
-              <Text className="text-xs text-muted text-center">
-                La tua privacy è importante. I tuoi dati non saranno mai condivisi senza il tuo consenso.
+            <View className="gap-6 items-center">
+              <Text className="text-7xl">📍</Text>
+              <Text className="text-2xl font-bold text-foreground text-center">
+                Permetti la posizione
               </Text>
+              <Text className="text-sm text-muted text-center">
+                Servirà a tracciare le tue passeggiate e mostrarti i percorsi vicini. Puoi sempre
+                modificarla nelle impostazioni del telefono.
+              </Text>
+              <TouchableOpacity
+                disabled={busy}
+                onPress={handleLocation}
+                className="bg-primary rounded-full py-4 px-12 active:opacity-90"
+              >
+                <Text className="text-white font-bold">Permetti posizione</Text>
+              </TouchableOpacity>
+              <TouchableOpacity disabled={busy} onPress={finishOnboarding} className="py-2">
+                <Text className="text-muted underline">Salta per ora</Text>
+              </TouchableOpacity>
             </View>
           )}
-
-          {/* Buttons */}
-          <View className="gap-3 mt-6">
-            <TouchableOpacity
-              onPress={handleNext}
-              className="bg-primary rounded-full py-3 items-center active:opacity-80"
-            >
-              <Text className="text-white font-semibold">
-                {step === "location" ? "Inizia" : "Avanti"}
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity onPress={handleSkip} className="py-3 items-center active:opacity-80">
-              <Text className="text-muted font-semibold">Salta per ora</Text>
-            </TouchableOpacity>
-          </View>
         </View>
       </ScrollView>
     </ScreenContainer>

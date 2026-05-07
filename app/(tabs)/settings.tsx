@@ -1,147 +1,137 @@
-import { ScrollView, Text, View, TouchableOpacity, Switch } from "react-native";
+import { ScrollView, Text, View, TouchableOpacity, Switch, Alert, Linking } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
-import { usePaymentService } from "@/lib/services/payment-service";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Storage } from "@/lib/services/storage";
+import { useRouter } from "expo-router";
 
 export default function SettingsScreen() {
-  const { createCheckout, PREMIUM_PLAN } = usePaymentService();
-  const [isPremium, setIsPremium] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
+  const router = useRouter();
+  const [premium, setPremium] = useState(false);
+  const [notif, setNotif] = useState(true);
+  const [hapticsOn, setHapticsOn] = useState(true);
 
-  const handleUpgradePremium = async () => {
-    setIsLoading(true);
-    const userId = "user_1"; // TODO: Get from auth context
-    const session = await createCheckout(userId, "premium_monthly");
+  useEffect(() => {
+    Storage.getPremium().then(setPremium);
+  }, []);
 
-    if (session) {
-      // Open checkout URL in browser
-      // In production, use expo-web-browser or linking
-      console.log("Checkout URL:", session.checkoutUrl);
-    }
-    setIsLoading(false);
+  const togglePremium = async (v: boolean) => {
+    setPremium(v);
+    await Storage.setPremium(v);
   };
+
+  const handleResetOnboarding = () => {
+    Alert.alert("Reset onboarding", "Mostra di nuovo l'onboarding al prossimo avvio?", [
+      { text: "Annulla", style: "cancel" },
+      {
+        text: "Reset",
+        style: "destructive",
+        onPress: async () => {
+          await Storage.setOnboardingDone(false);
+          router.replace("/onboarding");
+        },
+      },
+    ]);
+  };
+
+  const handleClearWalks = () => {
+    Alert.alert("Cancella passeggiate", "Eliminare tutte le passeggiate salvate?", [
+      { text: "Annulla", style: "cancel" },
+      {
+        text: "Elimina",
+        style: "destructive",
+        onPress: async () => {
+          await Storage.clearWalks();
+          Alert.alert("Fatto", "Tutte le passeggiate sono state eliminate.");
+        },
+      },
+    ]);
+  };
+
   return (
     <ScreenContainer className="p-6">
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+      <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}>
         <View className="flex-1 gap-6">
           <Text className="text-3xl font-bold text-foreground">Impostazioni</Text>
-          
-          {/* Subscription Section */}
-          <View className="gap-3">
-            <Text className="text-sm font-bold text-foreground">ABBONAMENTO</Text>
 
-            <View className="bg-surface rounded-2xl p-4 border border-border gap-3">
-              <View className="flex-row justify-between items-center">
-                <View className="flex-1">
-                  <Text className="text-base font-semibold text-foreground mb-1">
-                    {isPremium ? "✓ Premium Attivo" : "Piano Gratuito"}
-                  </Text>
-                  <Text className="text-xs text-muted">
-                    {isPremium
-                      ? "Accesso a tutte le feature"
-                      : "Limitato a 1 cane e mappe base"}
-                  </Text>
-                </View>
-                <View
-                  className={`px-3 py-1 rounded-full ${
-                    isPremium ? "bg-success/20" : "bg-primary/20"
-                  }`}
-                >
-                  <Text className={`text-xs font-bold ${isPremium ? "text-success" : "text-primary"}`}>
-                    {isPremium ? "PREMIUM" : "FREE"}
-                  </Text>
-                </View>
+          <View className="bg-primary rounded-3xl p-6">
+            <Text className="text-white text-xs font-bold mb-1">PREMIUM</Text>
+            <Text className="text-white text-2xl font-bold mb-2">
+              {premium ? "Attivo ✓" : "Sblocca tutte le funzioni"}
+            </Text>
+            <Text className="text-white/90 text-sm mb-4">
+              Mappe offline, multi-cane, statistiche avanzate, alert veterinario.
+            </Text>
+            {!premium ? (
+              <TouchableOpacity
+                onPress={() =>
+                  Alert.alert(
+                    "Premium €3.99/mese",
+                    "L'integrazione di pagamento richiede chiavi Lemon Squeezy. Per ora abilitiamo Premium localmente per il demo.",
+                    [
+                      { text: "Annulla", style: "cancel" },
+                      { text: "Attiva (demo)", onPress: () => togglePremium(true) },
+                    ]
+                  )
+                }
+                className="bg-white rounded-full py-3 items-center"
+              >
+                <Text className="text-primary font-bold">Diventa Premium • €3.99/mese</Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                onPress={() => togglePremium(false)}
+                className="bg-white/20 rounded-full py-3 items-center"
+              >
+                <Text className="text-white font-bold">Disattiva Premium (demo)</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <View className="bg-surface rounded-2xl border border-border divide-y divide-border">
+            <View className="p-4 flex-row items-center justify-between">
+              <View>
+                <Text className="font-semibold text-foreground">Notifiche</Text>
+                <Text className="text-xs text-muted">Promemoria e avvisi</Text>
               </View>
-
-              {!isPremium && (
-                <>
-                  <View className="h-px bg-border" />
-                  <View className="gap-2">
-                    <Text className="text-xs font-semibold text-foreground">
-                      Feature Premium:
-                    </Text>
-                    {PREMIUM_PLAN.features.map((feature, idx) => (
-                      <Text key={idx} className="text-xs text-muted">
-                        • {feature}
-                      </Text>
-                    ))}
-                  </View>
-                  <TouchableOpacity
-                    onPress={handleUpgradePremium}
-                    disabled={isLoading}
-                    className="bg-primary rounded-full py-3 items-center active:opacity-80"
-                  >
-                    <Text className="text-white font-bold">
-                      {isLoading ? "Caricamento..." : `Upgrade a €${PREMIUM_PLAN.price / 100}/mese`}
-                    </Text>
-                  </TouchableOpacity>
-                </>
-              )}
+              <Switch value={notif} onValueChange={setNotif} />
+            </View>
+            <View className="p-4 flex-row items-center justify-between">
+              <View>
+                <Text className="font-semibold text-foreground">Vibrazione</Text>
+                <Text className="text-xs text-muted">Feedback aptico</Text>
+              </View>
+              <Switch value={hapticsOn} onValueChange={setHapticsOn} />
             </View>
           </View>
 
-          {/* Notifications Section */}
           <View className="gap-3">
-            <Text className="text-sm font-bold text-foreground">NOTIFICHE</Text>
+            <Text className="text-sm font-bold text-foreground">DATI</Text>
+            <TouchableOpacity
+              onPress={handleResetOnboarding}
+              className="bg-surface rounded-2xl p-4 border border-border"
+            >
+              <Text className="font-semibold text-foreground">Rifai onboarding</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={handleClearWalks}
+              className="bg-surface rounded-2xl p-4 border border-border"
+            >
+              <Text className="font-semibold text-error">Cancella tutte le passeggiate</Text>
+            </TouchableOpacity>
+          </View>
 
-            <View className="bg-surface rounded-2xl p-4 border border-border flex-row justify-between items-center">
-              <View className="flex-1">
-                <Text className="text-base font-semibold text-foreground mb-1">
-                  Notifiche Push
-                </Text>
-                <Text className="text-xs text-muted">
-                  Reminder vaccini, antiparassitari, passeggiate
-                </Text>
-              </View>
-              <Switch
-                value={notificationsEnabled}
-                onValueChange={setNotificationsEnabled}
-                trackColor={{ false: "#767577", true: "#81C784" }}
-              />
+          <View className="gap-3">
+            <Text className="text-sm font-bold text-foreground">INFO</Text>
+            <View className="bg-surface rounded-2xl p-4 border border-border">
+              <Text className="text-xs text-muted">Versione</Text>
+              <Text className="font-semibold text-foreground">1.0.0</Text>
             </View>
-          </View>
-
-          {/* Privacy Section */}
-          <View className="gap-3">
-            <Text className="text-sm font-bold text-foreground">PRIVACY</Text>
-
-            <TouchableOpacity className="bg-surface rounded-2xl p-4 border border-border active:opacity-80">
-              <Text className="text-base font-semibold text-foreground">
-                Informativa Privacy
-              </Text>
+            <TouchableOpacity
+              onPress={() => Linking.openURL("https://openstreetmap.org/copyright")}
+              className="bg-surface rounded-2xl p-4 border border-border"
+            >
+              <Text className="font-semibold text-foreground">Mappe © OpenStreetMap</Text>
             </TouchableOpacity>
-
-            <TouchableOpacity className="bg-surface rounded-2xl p-4 border border-border active:opacity-80">
-              <Text className="text-base font-semibold text-foreground">
-                Termini di Servizio
-              </Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* Account Section */}
-          <View className="gap-3">
-            <Text className="text-sm font-bold text-foreground">ACCOUNT</Text>
-
-            <TouchableOpacity className="bg-surface rounded-2xl p-4 border border-border active:opacity-80">
-              <Text className="text-base font-semibold text-foreground">
-                Modifica Profilo
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity className="bg-error/10 rounded-2xl p-4 border border-error/30 active:opacity-80">
-              <Text className="text-base font-semibold text-error">Esci</Text>
-            </TouchableOpacity>
-          </View>
-
-          {/* App Info */}
-          <View className="gap-2 py-4 border-t border-border">
-            <Text className="text-xs text-muted text-center">
-              Passeggiata Furba v1.0.0
-            </Text>
-            <Text className="text-xs text-muted text-center">
-              © 2026 Passeggiata Furba. Tutti i diritti riservati.
-            </Text>
           </View>
         </View>
       </ScrollView>

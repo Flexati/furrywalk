@@ -29,11 +29,18 @@ export function createTRPCClient() {
           const token = await Auth.getSessionToken();
           return token ? { Authorization: `Bearer ${token}` } : {};
         },
-        // Custom fetch to include credentials for cookie-based auth
+        // Custom fetch to include credentials for cookie-based auth + offline tolerance
         fetch(url, options) {
           return fetch(url, {
             ...options,
             credentials: "include",
+          }).catch((err) => {
+            console.warn("[tRPC] fetch failed (offline tolerated):", String(err));
+            // Return a synthetic 503 so tRPC reports the error rather than crashing the app
+            return new Response(JSON.stringify([{ error: { json: { message: "offline" } } }]), {
+              status: 503,
+              headers: { "Content-Type": "application/json" },
+            });
           });
         },
       }),

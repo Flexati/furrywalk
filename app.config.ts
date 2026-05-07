@@ -64,7 +64,17 @@ const config: ExpoConfig = {
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
     package: env.androidPackage,
-    permissions: ["POST_NOTIFICATIONS"],
+    permissions: [
+      "POST_NOTIFICATIONS",
+      "ACCESS_FINE_LOCATION",
+      "ACCESS_COARSE_LOCATION",
+      "CAMERA",
+      "READ_MEDIA_IMAGES",
+      "READ_EXTERNAL_STORAGE",
+      "WRITE_EXTERNAL_STORAGE",
+      "VIBRATE",
+      "INTERNET",
+    ],
     intentFilters: [
       {
         action: "VIEW",
@@ -115,15 +125,39 @@ const config: ExpoConfig = {
       "expo-build-properties",
       {
         android: {
-          buildArchs: ["armeabi-v7a", "arm64-v8a"],
+          buildArchs: ["arm64-v8a"],
           minSdkVersion: 24,
         },
+      },
+    ],
+    [
+      "expo-location",
+      {
+        locationAlwaysAndWhenInUsePermission:
+          "Permetti a Passeggiata Furba di tracciare il tuo percorso durante la passeggiata.",
+        locationWhenInUsePermission:
+          "Permetti a Passeggiata Furba di tracciare il tuo percorso durante la passeggiata.",
+        isAndroidBackgroundLocationEnabled: false,
+      },
+    ],
+    [
+      "expo-image-picker",
+      {
+        photosPermission: "Passeggiata Furba accede alle foto per allegarle alle passeggiate.",
+        cameraPermission: "Passeggiata Furba accede alla fotocamera per le foto del cane.",
+      },
+    ],
+    [
+      "expo-notifications",
+      {
+        icon: "./assets/images/icon.png",
+        color: "#2D5A3D",
       },
     ],
   ],
   experiments: {
     typedRoutes: true,
-    reactCompiler: true,
+    reactCompiler: false,
   },
 };
 

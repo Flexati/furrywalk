@@ -45,7 +45,10 @@ export function getApiBaseUrl(): string {
     }
   }
 
-  // Fallback to empty (will use relative URL)
+  // Native fallback: localhost dev (won't be reached unless dev mode); production must set EXPO_PUBLIC_API_BASE_URL
+  if (ReactNative.Platform.OS !== "web") {
+    return "http://127.0.0.1:0"; // unreachable sentinel; tRPC fetches will fail gracefully (retry: 0)
+  }
   return "";
 }
 
