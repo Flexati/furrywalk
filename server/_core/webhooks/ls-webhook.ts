@@ -144,8 +144,34 @@ async function processSubscriptionEvent(
       }
 
       case "order_paid": {
+        // Resolve userId via subscription lookup (first_order_item.subscription_id)
+        const firstItem = attrs.first_order_item as
+          | { subscription_id?: number }
+          | undefined;
+        const orderSubId = firstItem?.subscription_id
+          ? String(firstItem.subscription_id)
+          : null;
+
+        let resolvedUserId = 0;
+        if (orderSubId) {
+          const [linkedSub] = await db
+            .select({ userId: subscriptions.userId })
+            .from(subscriptions)
+            .where(eq(subscriptions.lemonSqueezySubscriptionId, orderSubId))
+            .limit(1);
+          if (linkedSub) {
+            resolvedUserId = linkedSub.userId;
+          }
+        }
+
+        if (resolvedUserId === 0) {
+          console.warn(
+            `[LS Webhook] order_paid ${String(data.id)} — unable to resolve userId`,
+          );
+        }
+
         await db.insert(receipts).values({
-          userId: 0, // placeholder — resolved via subscription lookup
+          userId: resolvedUserId,
           lemonSqueezyOrderId: String(data.id),
           amountEur: String(attrs.subtotal ?? "0"),
           totalEur: String(attrs.total ?? "0"),

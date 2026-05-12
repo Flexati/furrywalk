@@ -73,6 +73,58 @@ jobs:
         env:
           ORG_GRADLE_PROJECT_reactNativeArchitectures: "arm64-v8a"
 
+      - name: Decode keystore (release)
+        if: ${{ github.event.inputs.build_type == 'release' }}
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "ERRORE: secret ANDROID_KEYSTORE_BASE64 mancante. Vedi docs/SETUP.md sezione 3." >&2
+            exit 1
+          fi
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/release.jks
+          echo "Keystore decodificato: $(wc -c < android/app/release.jks) bytes"
+
+      - name: Configure release signing
+        if: ${{ github.event.inputs.build_type == 'release' }}
+        env:
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+        run: |
+          cat >> android/gradle.properties <<EOF
+          MYAPP_RELEASE_STORE_FILE=release.jks
+          MYAPP_RELEASE_KEY_ALIAS=${KEY_ALIAS}
+          MYAPP_RELEASE_STORE_PASSWORD=${KEYSTORE_PASSWORD}
+          MYAPP_RELEASE_KEY_PASSWORD=${KEY_PASSWORD}
+          EOF
+          # Inietta signingConfig nel build.gradle dell'app se non gia' presente
+          GRADLE_FILE="android/app/build.gradle"
+          if ! grep -q "MYAPP_RELEASE_STORE_FILE" "$GRADLE_FILE"; then
+            python3 - <<'PY'
+          import re, pathlib
+          p = pathlib.Path("android/app/build.gradle")
+          s = p.read_text()
+          signing = """
+              signingConfigs {
+                  release {
+                      storeFile file(MYAPP_RELEASE_STORE_FILE)
+                      storePassword MYAPP_RELEASE_STORE_PASSWORD
+                      keyAlias MYAPP_RELEASE_KEY_ALIAS
+                      keyPassword MYAPP_RELEASE_KEY_PASSWORD
+                  }
+              }
+          """
+          s = re.sub(r"(android\s*\{)", r"\1" + signing, s, count=1)
+          s = re.sub(
+              r"(buildTypes\s*\{\s*release\s*\{)",
+              r"\1\n            signingConfig signingConfigs.release",
+              s, count=1
+          )
+          p.write_text(s)
+          PY
+          fi
+
       - name: Build APK (Release)
         if: ${{ github.event.inputs.build_type == 'release' }}
         run: |

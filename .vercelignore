@@ -1,0 +1,70 @@
+# Frontend app (not needed for API)
+app/
+assets/
+components/
+constants/
+hooks/
+lib/
+scripts/
+tests/
+public/
+dist/
+web-build/
+
+# Expo / Native
+.expo/
+.expo-shared/
+android/
+apk-output/
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+keystore.b64
+apk-debug.zip
+
+# Config files not needed for API build
+app.config.ts
+babel.config.js
+metro.config.js
+nativewind-env.d.ts
+tailwind.config.js
+theme.config.d.ts
+theme.config.js
+global.css
+eslint.config.js
+expo-env.d.ts
+.watchmanconfig
+.npmrc
+
+# Documentation / design
+*.md
+design.md
+todo.md
+INCIDENT_TRIAGE.md
+RCA_REPORT.md
+POST_MORTEM.md
+DEBUGGING_RUNBOOK.md
+
+# Dev / CI
+.github/
+.manus-logs/
+.vscode/
+.idea/
+.webdev/
+
+# DB migrations (not needed for API runtime)
+supabase/
+
+# Environment files (set in Vercel dashboard)
+.env.example
+.env.local
+
+# Git
+.git/
+.gitkeep
+.gitignore
+
+# Already deployed config
+.vercelignore

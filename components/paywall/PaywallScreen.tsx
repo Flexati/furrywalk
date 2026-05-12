@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   Pressable,
   Platform,
   useWindowDimensions,
+  Animated,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -152,6 +153,7 @@ export default function PaywallScreen() {
   const [isYearly, setIsYearly] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   const setPendingTier = useSubscriptionStore((s) => s.setPendingTier);
   const clearPendingTier = useSubscriptionStore((s) => s.clearPendingTier);
@@ -177,7 +179,7 @@ export default function PaywallScreen() {
         clearPendingTier();
         if (result.synced) {
           setSubscription({ tier: result.tier as "pro_ad_free", status: "active" });
-          router.back();
+          setShowConfirmation(true);
         }
       } catch {
         setError("Failed to verify subscription. Please contact support.");
@@ -231,6 +233,96 @@ export default function PaywallScreen() {
   }, []);
 
   const priceDisplay = isYearly ? "2.99" : "3.99";
+
+  // Animated checkmark scale for confirmation
+  const checkmarkScale = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (showConfirmation) {
+      Animated.spring(checkmarkScale, {
+        toValue: 1,
+        friction: 4,
+        tension: 80,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [showConfirmation]);
+
+  // ─── Confirmation Screen ───
+  if (showConfirmation) {
+    return (
+      <View className="flex-1 bg-[#FFF5E6] items-center justify-center px-8">
+        <Animated.View style={{ transform: [{ scale: checkmarkScale }] }}>
+          <View className="w-24 h-24 rounded-full bg-[#1E3D2F] items-center justify-center mb-6">
+            <Ionicons name="checkmark" size={48} color="#FFF" />
+          </View>
+        </Animated.View>
+
+        <Text className="text-[28px] font-bold text-[#1E3D2F] text-center">
+          Grazie!
+        </Text>
+        <Text className="text-[16px] text-[#2B2B2B] opacity-70 text-center mt-2 mb-8">
+          Il tuo abbonamento Pro è attivo
+        </Text>
+
+        {/* Plan summary card */}
+        <View className="bg-white rounded-2xl p-5 w-full shadow-sm mb-8">
+          <View className="flex-row items-center gap-3 mb-4">
+            <Ionicons name="star" size={20} color="#F47C35" />
+            <Text className="text-[17px] font-semibold text-[#1E3D2F]">
+              Passeggiata Furba Pro
+            </Text>
+          </View>
+
+          <View className="h-px bg-[#E8E8E8] mb-4" />
+
+          <View className="flex-row justify-between mb-2">
+            <Text className="text-[14px] text-[#2B2B2B] opacity-60">Piano</Text>
+            <Text className="text-[14px] font-semibold text-[#2B2B2B]">
+              {interval === "yearly" ? "Annuale" : "Mensile"}
+            </Text>
+          </View>
+
+          <View className="flex-row justify-between mb-2">
+            <Text className="text-[14px] text-[#2B2B2B] opacity-60">Prezzo</Text>
+            <Text className="text-[14px] font-semibold text-[#2B2B2B]">
+              {interval === "yearly" ? "€35.88/anno" : `€${priceDisplay}/mese`}
+            </Text>
+          </View>
+
+          <View className="flex-row justify-between mb-2">
+            <Text className="text-[14px] text-[#2B2B2B] opacity-60">Prova gratuita</Text>
+            <Text className="text-[14px] font-semibold text-[#1E3D2F]">7 giorni</Text>
+          </View>
+
+          <View className="flex-row justify-between">
+            <Text className="text-[14px] text-[#2B2B2B] opacity-60">Ricevuta</Text>
+            <Text className="text-[14px] font-semibold text-[#2B2B2B]">Via email</Text>
+          </View>
+        </View>
+
+        {/* Email receipt note */}
+        <View className="flex-row items-start gap-2 mb-8 px-2">
+          <Ionicons name="mail-outline" size={16} color="#2B2B2B" style={{ opacity: 0.5 }} />
+          <Text className="text-[13px] text-[#2B2B2B] opacity-50 flex-1">
+            Ti abbiamo inviato la ricevuta via email. Controlla anche la cartella spam.
+          </Text>
+        </View>
+
+        {/* CTA */}
+        <Pressable
+          onPress={() => router.back()}
+          className="bg-[#1E3D2F] py-4 rounded-2xl items-center w-full"
+          accessibilityRole="button"
+          accessibilityLabel="Torna all'app"
+        >
+          <Text className="text-white text-[17px] font-semibold">
+            Inizia a usare Pro
+          </Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   return (
     <View className="flex-1 bg-[#FFF5E6]">
