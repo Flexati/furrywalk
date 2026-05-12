@@ -203,44 +203,34 @@ async function processSubscriptionEvent(
 
 // ─── Main webhook handler ───
 export async function handleLSWebhook(req: Request, res: Response): Promise<void> {
-  console.log("[LS] webhook received");
   const rawBody = req.body instanceof Buffer
     ? req.body
     : Buffer.from(JSON.stringify(req.body));
   const signature = req.headers["x-signature"] as string;
 
   // 1. Validate signature
-  console.log("[LS] checking signature...");
   if (!signature || !verifySignature(rawBody, signature)) {
-    console.log("[LS] invalid signature");
     res.status(401).json({ error: "Invalid signature" });
     return;
   }
-  console.log("[LS] signature valid");
 
   const payload: LSWebhookPayload = req.body;
   const eventName = payload.meta.event_name;
   const lsEventId = String(payload.data.id);
 
   // 2. Idempotency check
-  console.log("[LS] checking duplicate...");
   const duplicate = await isDuplicate(lsEventId);
   if (duplicate) {
-    console.log("[LS] duplicate, skipping");
     res.status(200).json({ received: true, deduplicated: true });
     return;
   }
-  console.log("[LS] not duplicate");
 
   // 3. Record event
-  console.log("[LS] getting db...");
   const db = await getDb();
   if (!db) {
-    console.log("[LS] db unavailable");
     res.status(503).json({ error: "Database unavailable" });
     return;
   }
-  console.log("[LS] db ok, inserting event...");
 
   const [eventRecord] = await db.insert(webhookEvents).values({
     lsEventId,
@@ -251,21 +241,19 @@ export async function handleLSWebhook(req: Request, res: Response): Promise<void
     processed: false,
     receivedAt: new Date(),
   });
-  console.log("[LS] event inserted, processing...");
 
   // 4. Process
   try {
     await processSubscriptionEvent(eventName, payload.data);
-    console.log("[LS] event processed, updating...");
     await db
       .update(webhookEvents)
       .set({ processed: true, processedAt: new Date() })
       .where(eq(webhookEvents.id, eventRecord.insertId));
+    console.log(`[LS] ${eventName} processed (id: ${lsEventId})`);
     res.status(200).json({ received: true, processed: true });
-    console.log("[LS] done");
   } catch (error) {
     const errMsg = error instanceof Error ? error.message : "Unknown error";
-    console.log("[LS] error:", errMsg);
+    console.error(`[LS] ${eventName} FAILED (id: ${lsEventId}):`, errMsg);
     await db
       .update(webhookEvents)
       .set({

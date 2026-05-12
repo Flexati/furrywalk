@@ -8,7 +8,6 @@ import { registerStorageProxy } from "./storageProxy";
 import { handleLSWebhook } from "./webhooks/ls-webhook";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
-import { getDb } from "../db";
 
 // ─── Express app factory (shared between standalone server and Vercel serverless) ───
 export function createApp(): express.Express {
@@ -44,57 +43,8 @@ export function createApp(): express.Express {
   // Lemon Squeezy webhook endpoint
   app.post("/api/webhooks/ls", (req, res) => handleLSWebhook(req, res));
 
-  // Quick webhook connectivity test (signature + DB only)
-  app.post("/api/webhooks/test", async (req, res) => {
-    try {
-      const db = await getDb();
-      if (!db) { res.status(503).json({ error: "DB unavailable" }); return; }
-      // Try a simple query
-      await (db as unknown as { $client: { query: (sql: string) => Promise<unknown> } }).$client.query("SELECT 1");
-      res.json({ ok: true, hasUrl: !!process.env.DATABASE_URL });
-    } catch (err) {
-      res.status(500).json({ error: err instanceof Error ? err.message : "Unknown" });
-    }
-  });
-
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true, timestamp: Date.now() });
-  });
-
-  app.get("/api/health/db", async (_req, res) => {
-    const start = Date.now();
-    // Check env var presence (masked)
-    const dbUrl = process.env.DATABASE_URL;
-    const masked = dbUrl
-      ? dbUrl.replace(/\/\/.*@/, "//***:***@") // mask credentials
-      : "(not set)";
-
-    try {
-      // Quick DNS test
-      const { promises: dns } = await import("dns");
-      let dnsResult = "not tested";
-      try {
-        const addresses = await dns.resolve4("db.opeanvqycsdpgusfijve.supabase.co");
-        dnsResult = `IPv4: ${addresses.join(", ")}`;
-      } catch (e4) {
-        try {
-          const addresses = await dns.resolve6("db.opeanvqycsdpgusfijve.supabase.co");
-          dnsResult = `IPv6: ${addresses.join(", ")}`;
-        } catch (e6) {
-          dnsResult = `DNS failed: ${(e6 as Error).message}`;
-        }
-      }
-
-      const db = await getDb();
-      if (!db) {
-        res.json({ ok: false, error: "getDb returned null", maskedUrl: masked, dns: dnsResult, latency_ms: Date.now() - start });
-        return;
-      }
-      const result = await (db as unknown as { $client: { query: (sql: string) => Promise<unknown> } }).$client.query("SELECT 1");
-      res.json({ ok: true, latency_ms: Date.now() - start, dns: dnsResult, maskedUrl: masked });
-    } catch (err) {
-      res.json({ ok: false, error: err instanceof Error ? err.message : "Unknown error", maskedUrl: masked, latency_ms: Date.now() - start });
-    }
   });
 
   app.use(
