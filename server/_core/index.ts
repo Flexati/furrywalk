@@ -44,6 +44,19 @@ export function createApp(): express.Express {
   // Lemon Squeezy webhook endpoint
   app.post("/api/webhooks/ls", (req, res) => handleLSWebhook(req, res));
 
+  // Quick webhook connectivity test (signature + DB only)
+  app.post("/api/webhooks/test", async (req, res) => {
+    try {
+      const db = await getDb();
+      if (!db) { res.status(503).json({ error: "DB unavailable" }); return; }
+      // Try a simple query
+      await (db as unknown as { $client: { query: (sql: string) => Promise<unknown> } }).$client.query("SELECT 1");
+      res.json({ ok: true, hasUrl: !!process.env.DATABASE_URL });
+    } catch (err) {
+      res.status(500).json({ error: err instanceof Error ? err.message : "Unknown" });
+    }
+  });
+
   app.get("/api/health", (_req, res) => {
     res.json({ ok: true, timestamp: Date.now() });
   });
