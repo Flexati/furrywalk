@@ -61,6 +61,14 @@ jobs:
           yes | npx expo prebuild --platform android
         env:
           CI: true
+          EXPO_PUBLIC_API_BASE_URL: "https://passeggiata-furba.vercel.app"
+          EXPO_PUBLIC_APP_SCHEME: "passeggiatafurba"
+          EXPO_PUBLIC_LS_PRO_MONTHLY_VARIANT_ID: "1628153"
+          EXPO_PUBLIC_LS_PRO_YEARLY_VARIANT_ID: "1628200"
+          EXPO_PUBLIC_LS_FAMILY_MONTHLY_VARIANT_ID: ""
+          EXPO_PUBLIC_LS_FAMILY_YEARLY_VARIANT_ID: ""
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL || '' }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY || '' }}
 
       - name: Make Gradlew executable
         run: chmod +x android/gradlew
@@ -72,6 +80,14 @@ jobs:
           ./gradlew assembleDebug
         env:
           ORG_GRADLE_PROJECT_reactNativeArchitectures: "arm64-v8a"
+          EXPO_PUBLIC_API_BASE_URL: "https://passeggiata-furba.vercel.app"
+          EXPO_PUBLIC_APP_SCHEME: "passeggiatafurba"
+          EXPO_PUBLIC_LS_PRO_MONTHLY_VARIANT_ID: "1628153"
+          EXPO_PUBLIC_LS_PRO_YEARLY_VARIANT_ID: "1628200"
+          EXPO_PUBLIC_LS_FAMILY_MONTHLY_VARIANT_ID: ""
+          EXPO_PUBLIC_LS_FAMILY_YEARLY_VARIANT_ID: ""
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL || '' }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY || '' }}
 
       - name: Decode keystore (release)
         if: ${{ github.event.inputs.build_type == 'release' }}
@@ -132,6 +148,14 @@ jobs:
           ./gradlew assembleRelease
         env:
           ORG_GRADLE_PROJECT_reactNativeArchitectures: "arm64-v8a"
+          EXPO_PUBLIC_API_BASE_URL: "https://passeggiata-furba.vercel.app"
+          EXPO_PUBLIC_APP_SCHEME: "passeggiatafurba"
+          EXPO_PUBLIC_LS_PRO_MONTHLY_VARIANT_ID: "1628153"
+          EXPO_PUBLIC_LS_PRO_YEARLY_VARIANT_ID: "1628200"
+          EXPO_PUBLIC_LS_FAMILY_MONTHLY_VARIANT_ID: ""
+          EXPO_PUBLIC_LS_FAMILY_YEARLY_VARIANT_ID: ""
+          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL || '' }}
+          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY || '' }}
 
       - name: Find APK file
         id: find-apk
