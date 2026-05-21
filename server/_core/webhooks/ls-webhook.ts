@@ -115,9 +115,13 @@ async function processSubscriptionEvent(
             .set(subData)
             .where(eq(subscriptions.id, existing.id));
         } else {
-          // New subscription — userId will be resolved via LS custom_data or email
-          console.log(`[LS Webhook] New subscription ${lsSubId} — manual user linking needed`);
-          // Stub: in production, look up user by LS customer email or custom_data.user_id
+          // New subscription — userId not yet known (webhook arrived before checkout redirect).
+          // Store the subscription data in the webhook event for later reconciliation.
+          // subscription.sync will create the proper record when the user returns.
+          // If sync never runs (user closed browser), data is recoverable from LS dashboard.
+          console.log(
+            `[LS Webhook] New subscription ${lsSubId} — pending user link (data stored in webhook event)`,
+          );
         }
 
         // If status is terminal, revert ad tier to free

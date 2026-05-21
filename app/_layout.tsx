@@ -19,6 +19,7 @@ import type { EdgeInsets, Metrics, Rect } from "react-native-safe-area-context";
 
 import { trpc, createTRPCClient } from "@/lib/trpc";
 import { initManusRuntime, subscribeSafeAreaInsets } from "@/lib/_core/manus-runtime";
+import { initPaymentProvider, cleanupPaymentProvider } from "@/lib/services/payment-provider";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -84,10 +85,17 @@ export default function RootLayout() {
     } catch (e) {
       console.warn("[RootLayout] manus runtime init skipped", e);
     }
+    // Inizializza Google Play Billing (no-op su iOS/web)
+    initPaymentProvider().catch((e) =>
+      console.warn("[RootLayout] payment provider init failed", e)
+    );
     const t = setTimeout(() => {
       SplashScreen.hideAsync().catch(() => {});
     }, 200);
-    return () => clearTimeout(t);
+    return () => {
+      clearTimeout(t);
+      cleanupPaymentProvider();
+    };
   }, []);
 
   const handleSafeAreaUpdate = useCallback((metrics: Metrics) => {
@@ -141,6 +149,13 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(tabs)" />
             <Stack.Screen name="onboarding" />
+            <Stack.Screen
+              name="paywall"
+              options={{
+                presentation: "modal",
+                animation: "slide_from_bottom",
+              }}
+            />
             <Stack.Screen name="walk-tracker" options={{ presentation: "modal" }} />
             <Stack.Screen name="walk-summary" />
             <Stack.Screen name="map-view" />

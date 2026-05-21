@@ -57,12 +57,16 @@ Tutte le chiavi vanno in un file `.env` nella root `passeggiata-furba/` (non com
 2. **Settings → API** → **Create API key** → copiala.
 3. Crea un **Product → Subscription** (es. "Passeggiata Furba Premium", €4.99/mese), poi crea una **Variant** mensile e annota l'**ID variante**.
 4. **Settings → Webhooks** → **Add webhook** → URL del tuo backend (es. una Edge Function Supabase) → copia il **Signing secret**.
-5. Aggiungi al `.env`:
+5. Aggiungi al `.env` (le variabili server-side NON hanno `EXPO_PUBLIC_`):
    ```
-   EXPO_PUBLIC_LEMON_SQUEEZY_API_KEY=lsq_...
-   EXPO_PUBLIC_LEMON_SQUEEZY_STORE_ID=12345
-   EXPO_PUBLIC_LEMON_SQUEEZY_PREMIUM_VARIANT_ID=67890
-   EXPO_PUBLIC_LEMON_SQUEEZY_WEBHOOK_SECRET=whsec_...
+   # Server-side (NON incluse nel bundle APK, usate solo da Vercel)
+   LEMON_SQUEEZY_API_KEY=lsq_...
+   LEMON_SQUEEZY_STORE_ID=12345
+   LEMON_SQUEEZY_WEBHOOK_SECRET=whsec_...
+
+   # Client-side (pubblici, appaiono negli URL checkout)
+   EXPO_PUBLIC_LS_PRO_MONTHLY_VARIANT_ID=1628153
+   EXPO_PUBLIC_LS_PRO_YEARLY_VARIANT_ID=1628200
    ```
 6. Riavvia Expo. Il pulsante "Sblocca Premium" apre ora il **checkout reale** Lemon Squeezy.
 

@@ -2,8 +2,8 @@ import * as WebBrowser from "expo-web-browser";
 import * as Linking from "expo-linking";
 import { Platform } from "react-native";
 
-type BillingInterval = "monthly" | "yearly";
-type CheckoutTier = "pro_ad_free" | "pro_family";
+export type BillingInterval = "monthly" | "yearly";
+export type CheckoutTier = "pro_ad_free" | "pro_family";
 
 interface LSCheckoutConfig {
   tier: CheckoutTier;

@@ -1,23 +1,20 @@
 import { ScrollView, Text, View, TouchableOpacity, Switch, Alert, Linking } from "react-native";
 import { ScreenContainer } from "@/components/screen-container";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Storage } from "@/lib/services/storage";
 import { useRouter } from "expo-router";
+import { useSubscription } from "@/hooks/use-subscription";
+import Constants from "expo-constants";
+
+const APP_VERSION = Constants.expoConfig?.version ?? "1.0.0";
+const PRIVACY_POLICY_URL = "https://passeggiata-furba.vercel.app/api/privacy";
+const SUPPORT_EMAIL = "amzajaguar@gmail.com";
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const [premium, setPremium] = useState(false);
+  const { isPro, tier, status, isLoading: subLoading } = useSubscription();
   const [notif, setNotif] = useState(true);
   const [hapticsOn, setHapticsOn] = useState(true);
-
-  useEffect(() => {
-    Storage.getPremium().then(setPremium);
-  }, []);
-
-  const togglePremium = async (v: boolean) => {
-    setPremium(v);
-    await Storage.setPremium(v);
-  };
 
   const handleResetOnboarding = () => {
     Alert.alert("Reset onboarding", "Mostra di nuovo l'onboarding al prossimo avvio?", [
@@ -47,6 +44,20 @@ export default function SettingsScreen() {
     ]);
   };
 
+  const premiumLabel = subLoading
+    ? "Caricamento..."
+    : isPro
+      ? `Pro ${tier === "pro_family" ? "Family" : ""} Attivo ✓`
+      : "Sblocca tutte le funzioni";
+
+  const premiumSubLabel = isPro
+    ? status === "on_trial"
+      ? "Periodo di prova in corso"
+      : status === "active"
+        ? "Abbonamento attivo"
+        : status
+    : "Mappe offline, multi-cane, statistiche avanzate, alert veterinario.";
+
   return (
     <ScreenContainer className="p-6">
       <ScrollView contentContainerStyle={{ flexGrow: 1, paddingBottom: 24 }}>
@@ -56,33 +67,25 @@ export default function SettingsScreen() {
           <View className="bg-primary rounded-3xl p-6">
             <Text className="text-white text-xs font-bold mb-1">PREMIUM</Text>
             <Text className="text-white text-2xl font-bold mb-2">
-              {premium ? "Attivo ✓" : "Sblocca tutte le funzioni"}
+              {premiumLabel}
             </Text>
             <Text className="text-white/90 text-sm mb-4">
-              Mappe offline, multi-cane, statistiche avanzate, alert veterinario.
+              {premiumSubLabel}
             </Text>
-            {!premium ? (
+            {!subLoading && !isPro && (
               <TouchableOpacity
-                onPress={() =>
-                  Alert.alert(
-                    "Premium €3.99/mese",
-                    "L'integrazione di pagamento richiede chiavi Lemon Squeezy. Per ora abilitiamo Premium localmente per il demo.",
-                    [
-                      { text: "Annulla", style: "cancel" },
-                      { text: "Attiva (demo)", onPress: () => togglePremium(true) },
-                    ]
-                  )
-                }
+                onPress={() => router.push("/paywall")}
                 className="bg-white rounded-full py-3 items-center"
               >
                 <Text className="text-primary font-bold">Diventa Premium • €3.99/mese</Text>
               </TouchableOpacity>
-            ) : (
+            )}
+            {isPro && (
               <TouchableOpacity
-                onPress={() => togglePremium(false)}
+                onPress={() => router.push("/paywall")}
                 className="bg-white/20 rounded-full py-3 items-center"
               >
-                <Text className="text-white font-bold">Disattiva Premium (demo)</Text>
+                <Text className="text-white font-bold">Gestisci abbonamento</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -121,17 +124,39 @@ export default function SettingsScreen() {
           </View>
 
           <View className="gap-3">
-            <Text className="text-sm font-bold text-foreground">INFO</Text>
-            <View className="bg-surface rounded-2xl p-4 border border-border">
-              <Text className="text-xs text-muted">Versione</Text>
-              <Text className="font-semibold text-foreground">1.0.0</Text>
-            </View>
+            <Text className="text-sm font-bold text-foreground">SUPPORTO</Text>
+            <TouchableOpacity
+              onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}
+              className="bg-surface rounded-2xl p-4 border border-border flex-row items-center justify-between"
+              accessibilityRole="link"
+              accessibilityLabel="Apri la Privacy Policy"
+            >
+              <Text className="font-semibold text-foreground">Privacy Policy</Text>
+              <Text className="text-muted text-xs">→</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              onPress={() =>
+                Linking.openURL(
+                  `mailto:${SUPPORT_EMAIL}?subject=Passeggiata%20Furba%20Support`
+                )
+              }
+              className="bg-surface rounded-2xl p-4 border border-border flex-row items-center justify-between"
+              accessibilityRole="button"
+              accessibilityLabel="Invia email al supporto"
+            >
+              <Text className="font-semibold text-foreground">Contatta il Supporto</Text>
+              <Text className="text-muted text-xs">✉</Text>
+            </TouchableOpacity>
             <TouchableOpacity
               onPress={() => Linking.openURL("https://openstreetmap.org/copyright")}
               className="bg-surface rounded-2xl p-4 border border-border"
             >
               <Text className="font-semibold text-foreground">Mappe © OpenStreetMap</Text>
             </TouchableOpacity>
+          </View>
+
+          <View className="bg-surface rounded-2xl p-4 border border-border items-center">
+            <Text className="text-xs text-muted">Passeggiata Furba v{APP_VERSION}</Text>
           </View>
         </View>
       </ScrollView>

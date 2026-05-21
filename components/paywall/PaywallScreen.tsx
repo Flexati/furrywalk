@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   View,
   Text,
@@ -12,7 +12,13 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { trpc } from "@/lib/trpc";
 import { useSubscriptionStore } from "@/hooks/use-subscription-store";
-import { openLSCheckout, getLSCheckoutConfig, onLSCheckoutReturn } from "@/lib/services/ls-checkout";
+import {
+  requestSubscription,
+  onLSCheckoutReturn,
+  type CheckoutTier,
+  type BillingInterval,
+  type CheckoutResult,
+} from "@/lib/services/payment-provider";
 
 // ─── Benefit definitions ───
 const BENEFITS: { icon: string; title: string; desc: string }[] = [
@@ -160,18 +166,16 @@ export default function PaywallScreen() {
   const setSubscription = useSubscriptionStore((s) => s.setSubscription);
 
   const syncMutation = trpc.subscription.sync.useMutation();
+  const syncPlayBillingMutation = trpc.subscription.syncPlayBilling.useMutation();
   const restoreMutation = trpc.subscription.restore.useMutation();
 
-  const tier = "pro_ad_free" as const;
-  const interval = isYearly ? ("yearly" as const) : ("monthly" as const);
+  const tier: CheckoutTier = "pro_ad_free";
+  const interval: BillingInterval = isYearly ? "yearly" : "monthly";
 
-  const checkoutConfig = useMemo(
-    () => getLSCheckoutConfig(tier, interval),
-    [tier, interval],
-  );
-
-  // Handle deep link return from LS checkout
+  // Handle deep link return from LS checkout (iOS/web only)
   useEffect(() => {
+    if (Platform.OS === "android") return; // Android uses Play Billing, no deep link return
+
     const cleanup = onLSCheckoutReturn(async (_url) => {
       setIsLoading(true);
       try {
@@ -191,29 +195,49 @@ export default function PaywallScreen() {
   }, []);
 
   const handleUpgrade = useCallback(async () => {
-    if (!checkoutConfig) {
-      setError("Checkout unavailable. Please try again later.");
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
     setPendingTier(`${tier}_${interval}`);
 
-    const result = await openLSCheckout(checkoutConfig);
-
-    if (!result.success && !result.cancelled) {
-      setError(result.error ?? "Could not open checkout.");
-      clearPendingTier();
-      setIsLoading(false);
-    }
+    const result: CheckoutResult = await requestSubscription({ tier, interval });
 
     if (result.cancelled) {
       clearPendingTier();
       setIsLoading(false);
+      return;
     }
-    // On success, the deep link listener handles the rest
-  }, [checkoutConfig, tier, interval]);
+
+    if (!result.success) {
+      setError(result.error ?? "Could not complete purchase.");
+      clearPendingTier();
+      setIsLoading(false);
+      return;
+    }
+
+    // ─── Play Billing: sync purchase with server ───
+    if (result.provider === "play-billing" && result.purchaseToken && result.productId) {
+      try {
+        const syncResult = await syncPlayBillingMutation.mutateAsync({
+          purchaseToken: result.purchaseToken,
+          productId: result.productId,
+        });
+        clearPendingTier();
+        if (syncResult.synced) {
+          setSubscription({ tier: syncResult.tier, status: "active" });
+          setShowConfirmation(true);
+        }
+      } catch {
+        setError("Failed to verify subscription. Please contact support.");
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
+
+    // ─── LS (iOS/web): handled by deep link listener ───
+    // On success, the deep link listener above handles the rest
+    setIsLoading(false);
+  }, [tier, interval]);
 
   const handleRestore = useCallback(async () => {
     setIsLoading(true);
@@ -365,8 +389,8 @@ export default function PaywallScreen() {
         {/* Primary CTA */}
         <Pressable
           onPress={handleUpgrade}
-          disabled={isLoading || !checkoutConfig}
-          className={`mt-6 py-4 rounded-2xl items-center ${isLoading || !checkoutConfig ? "bg-[#1E3D2F] opacity-50" : "bg-[#1E3D2F]"}`}
+          disabled={isLoading}
+          className={`mt-6 py-4 rounded-2xl items-center ${isLoading ? "bg-[#1E3D2F] opacity-50" : "bg-[#1E3D2F]"}`}
           accessibilityRole="button"
           accessibilityLabel={`Start free trial for €${priceDisplay} per month`}
         >

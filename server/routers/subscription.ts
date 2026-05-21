@@ -116,14 +116,39 @@ export const subscriptionRouter = router({
         throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "LS API key not configured" });
       }
 
-      const endpoint = input.subscriptionId
-        ? `https://api.lemonsqueezy.com/v1/subscriptions/${input.subscriptionId}`
-        : input.checkoutSessionId
-          ? `https://api.lemonsqueezy.com/v1/checkouts/${input.checkoutSessionId}`
-          : null;
+      // Build endpoint — if neither ID is provided, fall back to most recent
+      // active LS subscription for this user (called with {} after deep-link return)
+      let endpoint: string | null = null;
 
-      if (!endpoint) {
-        throw new TRPCError({ code: "BAD_REQUEST", message: "Missing subscriptionId or checkoutSessionId" });
+      if (input.subscriptionId) {
+        endpoint = `https://api.lemonsqueezy.com/v1/subscriptions/${input.subscriptionId}`;
+      } else if (input.checkoutSessionId) {
+        endpoint = `https://api.lemonsqueezy.com/v1/checkouts/${input.checkoutSessionId}`;
+      } else {
+        // Fallback: read most recent LS subscription from DB and verify it
+        const db = await getDb();
+        if (db) {
+          const [latestSub] = await db
+            .select()
+            .from(subscriptions)
+            .where(
+              and(
+                eq(subscriptions.userId, ctx.user.id),
+                eq(subscriptions.status, "active"),
+              ),
+            )
+            .orderBy(desc(subscriptions.createdAt))
+            .limit(1);
+
+          if (latestSub?.lemonSqueezySubscriptionId &&
+              latestSub.lemonSqueezyProductId !== "google-play") {
+            endpoint = `https://api.lemonsqueezy.com/v1/subscriptions/${latestSub.lemonSqueezySubscriptionId}`;
+          }
+        }
+        // Still no endpoint? Trust local DB state and return synced
+        if (!endpoint) {
+          return { synced: false, tier: "free_with_ads" as const };
+        }
       }
 
       const lsResponse = await fetch(endpoint, {
@@ -177,5 +202,73 @@ export const subscriptionRouter = router({
         .where(eq(adTiers.userId, ctx.user.id));
 
       return { synced: true, tier: resolvedTier };
+    }),
+
+  /** Sync a Google Play Billing purchase after successful checkout. */
+  syncPlayBilling: protectedProcedure
+    .input(
+      z.object({
+        purchaseToken: z.string(),
+        productId: z.string(),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Database unavailable" });
+
+      // Map SKU to tier/interval
+      const skuToTier: Record<
+        string,
+        { tier: "pro_ad_free" | "pro_family"; interval: "monthly" | "yearly" }
+      > = {
+        premium_monthly: { tier: "pro_ad_free", interval: "monthly" },
+        premium_yearly: { tier: "pro_ad_free", interval: "yearly" },
+      };
+
+      const mapping = skuToTier[input.productId] ?? {
+        tier: "pro_ad_free" as const,
+        interval: "monthly" as const,
+      };
+
+      const now = new Date();
+      const periodEnd = new Date(now);
+      if (mapping.interval === "monthly") periodEnd.setMonth(periodEnd.getMonth() + 1);
+      else periodEnd.setFullYear(periodEnd.getFullYear() + 1);
+
+      // Check for duplicate purchase token
+      const [existing] = await db
+        .select({ id: subscriptions.id })
+        .from(subscriptions)
+        .where(eq(subscriptions.lemonSqueezySubscriptionId, input.purchaseToken))
+        .limit(1);
+
+      if (existing) {
+        return { synced: true, tier: mapping.tier, alreadyRecorded: true };
+      }
+
+      // Insert subscription record (reuse LS columns for Play Billing data)
+      await db.insert(subscriptions).values({
+        userId: ctx.user.id,
+        lemonSqueezySubscriptionId: input.purchaseToken, // stores Play Store purchase token
+        lemonSqueezyVariantId: input.productId, // stores Play Store product ID
+        lemonSqueezyProductId: "google-play",
+        tier: mapping.tier,
+        status: "active" as const,
+        currentPeriodStart: now,
+        currentPeriodEnd: periodEnd,
+      });
+
+      // Update ad tier: pro users get no ads
+      await db
+        .update(adTiers)
+        .set({
+          tier: mapping.tier,
+          bannerEnabled: false,
+          rewardedEnabled: false,
+          interstitialEnabled: false,
+        })
+        .where(eq(adTiers.userId, ctx.user.id));
+
+      return { synced: true, tier: mapping.tier };
     }),
 });
