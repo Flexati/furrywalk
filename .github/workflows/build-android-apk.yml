@@ -108,6 +108,8 @@ jobs:
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
+          # Ensure trailing newline before appending (prevents "24MYAPP_RELEASE_STORE_FILE" corruption)
+          echo "" >> android/gradle.properties
           cat >> android/gradle.properties <<EOF
           MYAPP_RELEASE_STORE_FILE=release.jks
           MYAPP_RELEASE_KEY_ALIAS=${KEY_ALIAS}
@@ -252,6 +254,8 @@ jobs:
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
+          # Ensure trailing newline before appending (prevents "24MYAPP_RELEASE_STORE_FILE" corruption)
+          echo "" >> android/gradle.properties
           cat >> android/gradle.properties <<EOF
           MYAPP_RELEASE_STORE_FILE=release.jks
           MYAPP_RELEASE_KEY_ALIAS=${KEY_ALIAS}
