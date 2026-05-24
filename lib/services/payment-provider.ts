@@ -1,11 +1,10 @@
 /**
- * Unified Payment Provider
+ * Unified Payment Provider — Google Play Billing (Android only)
  *
- * Selects the correct billing backend at runtime:
- * - Android  → Google Play Billing (via react-native-iap)
- * - iOS/web  → Lemon Squeezy hosted checkout
+ * Uses react-native-iap v15 for Play Store subscription purchases.
+ * iOS and Web payments are not yet implemented.
  *
- * This file replaces the fragmented payment-service.ts + ls-checkout.ts duality.
+ * Entry point for all subscription purchase flows in the app.
  */
 
 import { Platform } from "react-native";
@@ -18,16 +17,9 @@ import {
   type PlayBillingTier,
   type PlayBillingResult,
 } from "./play-billing";
-import {
-  openLSCheckout,
-  getLSCheckoutConfig,
-  onLSCheckoutReturn,
-  type CheckoutTier as LSCheckoutTier,
-  type BillingInterval as LSBillingInterval,
-} from "./ls-checkout";
 
 // ─── Public types ───
-export type BillingProvider = "play-billing" | "lemon-squeezy";
+export type BillingProvider = "play-billing";
 export type CheckoutTier = PlayBillingTier; // "pro_ad_free" | "pro_family"
 export type BillingInterval = PlayBillingInterval; // "monthly" | "yearly"
 
@@ -45,8 +37,6 @@ export interface CheckoutResult {
   purchaseToken?: string;
   /** Play Billing: the product ID purchased */
   productId?: string;
-  /** LS: the checkout session ID returned after redirect */
-  checkoutSessionId?: string;
 }
 
 // ─── Initialize (call once at app root) ───
@@ -69,8 +59,7 @@ export function cleanupPaymentProvider(): void {
 
 // ─── Provider detection ───
 export function getActiveBillingProvider(): BillingProvider {
-  if (Platform.OS === "android") return "play-billing";
-  return "lemon-squeezy";
+  return "play-billing";
 }
 
 // ─── Request subscription ───
@@ -91,25 +80,11 @@ export async function requestSubscription(
     };
   }
 
-  // Lemon Squeezy path (iOS / web)
-  const config = getLSCheckoutConfig(
-    req.tier as LSCheckoutTier,
-    req.interval as LSBillingInterval,
-  );
-
-  if (!config) {
-    return {
-      success: false,
-      cancelled: false,
-      provider: "lemon-squeezy",
-      error: "LS checkout configuration not available. Check variant ID env vars.",
-    };
-  }
-
-  const result = await openLSCheckout(config);
   return {
-    ...result,
-    provider: "lemon-squeezy",
+    success: false,
+    cancelled: false,
+    provider: "play-billing",
+    error: "Billing not available on this platform",
   };
 }
 
@@ -124,17 +99,11 @@ export async function validateOnServer(
     );
   }
 
-  // LS purchase is validated server-side via webhook / subscription.sync
-  return { valid: true };
+  return { valid: false, error: "No purchase token to validate" };
 }
-
-// ─── Deep link listener (for LS checkout return on iOS) ───
-export { onLSCheckoutReturn };
 
 // ─── Check if provider is ready ───
 export function isPaymentReady(): boolean {
-  if (Platform.OS === "android") return true; // initPlayBilling handles this
-  // Check if LS variant IDs are configured
-  const config = getLSCheckoutConfig("pro_ad_free", "monthly");
-  return config !== null;
+  if (Platform.OS === "android") return true;
+  return false; // iOS/Web payments not yet implemented
 }

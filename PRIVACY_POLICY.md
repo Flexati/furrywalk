@@ -28,8 +28,8 @@ Email: amzajaguar@gmail.com
 
 ### 2.5 Payment Data
 - Subscription tier and status (Free / Pro / Pro Family)
-- Purchase tokens and order IDs (Google Play Billing / Lemon Squeezy)
-- **We do NOT store full credit card details.** Payments are processed by Google Play and Lemon Squeezy.
+- Purchase tokens and order IDs (Google Play Billing)
+- **We do NOT store full credit card details.** Payments are processed by Google Play.
 
 ## 3. How We Use Your Data
 
@@ -46,7 +46,6 @@ We do **NOT** sell your data to third parties. Data is shared only with:
 |---------|---------|-------------|
 | Supabase | Database hosting | All app data |
 | Google Play Billing | Payment processing | Purchase tokens |
-| Lemon Squeezy | Payment processing (iOS/Web) | Purchase tokens |
 | Vercel | API hosting | Encrypted in transit |
 
 ## 5. Data Retention

@@ -14,7 +14,6 @@ import { trpc } from "@/lib/trpc";
 import { useSubscriptionStore } from "@/hooks/use-subscription-store";
 import {
   requestSubscription,
-  onLSCheckoutReturn,
   type CheckoutTier,
   type BillingInterval,
   type CheckoutResult,
@@ -165,34 +164,11 @@ export default function PaywallScreen() {
   const clearPendingTier = useSubscriptionStore((s) => s.clearPendingTier);
   const setSubscription = useSubscriptionStore((s) => s.setSubscription);
 
-  const syncMutation = trpc.subscription.sync.useMutation();
   const syncPlayBillingMutation = trpc.subscription.syncPlayBilling.useMutation();
   const restoreMutation = trpc.subscription.restore.useMutation();
 
   const tier: CheckoutTier = "pro_ad_free";
   const interval: BillingInterval = isYearly ? "yearly" : "monthly";
-
-  // Handle deep link return from LS checkout (iOS/web only)
-  useEffect(() => {
-    if (Platform.OS === "android") return; // Android uses Play Billing, no deep link return
-
-    const cleanup = onLSCheckoutReturn(async (_url) => {
-      setIsLoading(true);
-      try {
-        const result = await syncMutation.mutateAsync({});
-        clearPendingTier();
-        if (result.synced) {
-          setSubscription({ tier: result.tier as "pro_ad_free", status: "active" });
-          setShowConfirmation(true);
-        }
-      } catch {
-        setError("Failed to verify subscription. Please contact support.");
-      } finally {
-        setIsLoading(false);
-      }
-    });
-    return cleanup;
-  }, []);
 
   const handleUpgrade = useCallback(async () => {
     setIsLoading(true);
@@ -214,8 +190,8 @@ export default function PaywallScreen() {
       return;
     }
 
-    // ─── Play Billing: sync purchase with server ───
-    if (result.provider === "play-billing" && result.purchaseToken && result.productId) {
+    // Play Billing: sync purchase with server
+    if (result.purchaseToken && result.productId) {
       try {
         const syncResult = await syncPlayBillingMutation.mutateAsync({
           purchaseToken: result.purchaseToken,
@@ -234,9 +210,8 @@ export default function PaywallScreen() {
       return;
     }
 
-    // ─── LS (iOS/web): handled by deep link listener ───
-    // On success, the deep link listener above handles the rest
     setIsLoading(false);
+    setError("Purchase completed but no token received. Please try again.");
   }, [tier, interval]);
 
   const handleRestore = useCallback(async () => {
@@ -386,18 +361,26 @@ export default function PaywallScreen() {
         <BenefitList />
         <TrustBadges />
 
-        {/* Primary CTA */}
-        <Pressable
-          onPress={handleUpgrade}
-          disabled={isLoading}
-          className={`mt-6 py-4 rounded-2xl items-center ${isLoading ? "bg-[#1E3D2F] opacity-50" : "bg-[#1E3D2F]"}`}
-          accessibilityRole="button"
-          accessibilityLabel={`Start free trial for €${priceDisplay} per month`}
-        >
-          <Text className="text-white text-[17px] font-semibold">
-            {isLoading ? "Loading..." : "Start 7-Day Free Trial"}
-          </Text>
-        </Pressable>
+        {/* Primary CTA — only available on Android */}
+        {Platform.OS === "android" ? (
+          <Pressable
+            onPress={handleUpgrade}
+            disabled={isLoading}
+            className={`mt-6 py-4 rounded-2xl items-center ${isLoading ? "bg-[#1E3D2F] opacity-50" : "bg-[#1E3D2F]"}`}
+            accessibilityRole="button"
+            accessibilityLabel={`Start free trial for €${priceDisplay} per month`}
+          >
+            <Text className="text-white text-[17px] font-semibold">
+              {isLoading ? "Loading..." : "Start 7-Day Free Trial"}
+            </Text>
+          </Pressable>
+        ) : (
+          <View className="mt-6 py-4 rounded-2xl items-center bg-[#E8E8E8]">
+            <Text className="text-[#2B2B2B] text-[15px] opacity-70">
+              Available on Android only
+            </Text>
+          </View>
+        )}
 
         {error && (
           <Text className="text-red-500 text-center text-sm mt-3">{error}</Text>

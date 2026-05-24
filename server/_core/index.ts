@@ -5,7 +5,6 @@ import net from "net";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
-import { handleLSWebhook } from "./webhooks/ls-webhook";
 import { handlePlayBillingSync } from "./play-billing";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
@@ -40,9 +39,6 @@ export function createApp(): express.Express {
 
   registerStorageProxy(app);
   registerOAuthRoutes(app);
-
-  // Lemon Squeezy webhook endpoint
-  app.post("/api/webhooks/ls", (req, res) => handleLSWebhook(req, res));
 
   // Google Play Billing purchase sync
   app.post("/api/play-billing/sync", (req, res) => handlePlayBillingSync(req, res));
@@ -85,7 +81,7 @@ export function createApp(): express.Express {
     <li><strong>Profilo cane:</strong> nome, razza, età, peso, foto (opzionale).</li>
     <li><strong>Passeggiate:</strong> traccia GPS durante le camminate, distanza, durata, foto allegate.</li>
     <li><strong>Salute:</strong> date vaccinazioni e antiparassitari inserite dall'utente.</li>
-    <li><strong>Abbonamento:</strong> tier (Free/Pro), token di acquisto Google Play o Lemon Squeezy. <em>Non memorizziamo dati di carta di credito.</em></li>
+    <li><strong>Abbonamento:</strong> tier (Free/Pro), token di acquisto Google Play. <em>Non memorizziamo dati di carta di credito.</em></li>
     <li><strong>Diagnostica:</strong> log anonimi di crash (via Expo).</li>
   </ul>
 
@@ -103,8 +99,7 @@ export function createApp(): express.Express {
   <table>
     <tr><th>Servizio</th><th>Finalità</th><th>Dato condiviso</th></tr>
     <tr><td>Supabase</td><td>Database e storage</td><td>Tutti i dati app</td></tr>
-    <tr><td>Google Play Billing</td><td>Pagamenti Android</td><td>Token acquisto</td></tr>
-    <tr><td>Lemon Squeezy</td><td>Pagamenti iOS/Web</td><td>Token acquisto</td></tr>
+    <tr><td>Google Play Billing</td><td>Pagamenti</td><td>Token acquisto</td></tr>
     <tr><td>Vercel</td><td>Hosting API</td><td>Dati cifrati in transito</td></tr>
   </table>
 

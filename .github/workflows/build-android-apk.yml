@@ -63,10 +63,6 @@ jobs:
           CI: true
           EXPO_PUBLIC_API_BASE_URL: "https://passeggiata-furba.vercel.app"
           EXPO_PUBLIC_APP_SCHEME: "passeggiatafurba"
-          EXPO_PUBLIC_LS_PRO_MONTHLY_VARIANT_ID: "1628153"
-          EXPO_PUBLIC_LS_PRO_YEARLY_VARIANT_ID: "1628200"
-          EXPO_PUBLIC_LS_FAMILY_MONTHLY_VARIANT_ID: ""
-          EXPO_PUBLIC_LS_FAMILY_YEARLY_VARIANT_ID: ""
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL || '' }}
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY || '' }}
 
@@ -82,10 +78,6 @@ jobs:
           ORG_GRADLE_PROJECT_reactNativeArchitectures: "arm64-v8a"
           EXPO_PUBLIC_API_BASE_URL: "https://passeggiata-furba.vercel.app"
           EXPO_PUBLIC_APP_SCHEME: "passeggiatafurba"
-          EXPO_PUBLIC_LS_PRO_MONTHLY_VARIANT_ID: "1628153"
-          EXPO_PUBLIC_LS_PRO_YEARLY_VARIANT_ID: "1628200"
-          EXPO_PUBLIC_LS_FAMILY_MONTHLY_VARIANT_ID: ""
-          EXPO_PUBLIC_LS_FAMILY_YEARLY_VARIANT_ID: ""
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL || '' }}
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY || '' }}
 
@@ -152,10 +144,6 @@ jobs:
           ORG_GRADLE_PROJECT_reactNativeArchitectures: "arm64-v8a"
           EXPO_PUBLIC_API_BASE_URL: "https://passeggiata-furba.vercel.app"
           EXPO_PUBLIC_APP_SCHEME: "passeggiatafurba"
-          EXPO_PUBLIC_LS_PRO_MONTHLY_VARIANT_ID: "1628153"
-          EXPO_PUBLIC_LS_PRO_YEARLY_VARIANT_ID: "1628200"
-          EXPO_PUBLIC_LS_FAMILY_MONTHLY_VARIANT_ID: ""
-          EXPO_PUBLIC_LS_FAMILY_YEARLY_VARIANT_ID: ""
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL || '' }}
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY || '' }}
 
@@ -227,10 +215,6 @@ jobs:
           CI: true
           EXPO_PUBLIC_API_BASE_URL: "https://passeggiata-furba.vercel.app"
           EXPO_PUBLIC_APP_SCHEME: "passeggiatafurba"
-          EXPO_PUBLIC_LS_PRO_MONTHLY_VARIANT_ID: "1628153"
-          EXPO_PUBLIC_LS_PRO_YEARLY_VARIANT_ID: "1628200"
-          EXPO_PUBLIC_LS_FAMILY_MONTHLY_VARIANT_ID: ""
-          EXPO_PUBLIC_LS_FAMILY_YEARLY_VARIANT_ID: ""
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL || '' }}
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY || '' }}
 
@@ -296,10 +280,6 @@ jobs:
           ORG_GRADLE_PROJECT_reactNativeArchitectures: "arm64-v8a"
           EXPO_PUBLIC_API_BASE_URL: "https://passeggiata-furba.vercel.app"
           EXPO_PUBLIC_APP_SCHEME: "passeggiatafurba"
-          EXPO_PUBLIC_LS_PRO_MONTHLY_VARIANT_ID: "1628153"
-          EXPO_PUBLIC_LS_PRO_YEARLY_VARIANT_ID: "1628200"
-          EXPO_PUBLIC_LS_FAMILY_MONTHLY_VARIANT_ID: ""
-          EXPO_PUBLIC_LS_FAMILY_YEARLY_VARIANT_ID: ""
           EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL || '' }}
           EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY || '' }}
 
