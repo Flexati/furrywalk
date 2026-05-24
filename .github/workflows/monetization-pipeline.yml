@@ -7,8 +7,8 @@ name: Monetization Pipeline
 on:
   workflow_dispatch:
     inputs:
-      run_ls_simulation:
-        description: "Run Lemon Squeezy webhook simulation"
+      run_billing_check:
+        description: "Run Google Play Billing validation"
         required: false
         default: "true"
       run_ad_dry_run:
@@ -25,7 +25,6 @@ on:
       - "hooks/use-ad-tier*.ts"
       - "components/paywall/**"
       - "components/ads/**"
-      - "lib/services/ls-checkout.ts"
 
 env:
   NODE_VERSION: "20"
@@ -84,10 +83,10 @@ jobs:
         env:
           DATABASE_URL: "mysql://placeholder:placeholder@localhost:3306/placeholder"
 
-  # ─── Gate 4: LS Webhook Simulation ───
-  ls-webhook-sim:
+  # ─── Gate 4: Google Play Billing validation ───
+  billing-check:
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.run_ls_simulation != 'false' }}
+    if: ${{ github.event.inputs.run_billing_check != 'false' }}
     needs: [typecheck]
     steps:
       - uses: actions/checkout@v4
@@ -99,10 +98,25 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: "pnpm"
       - run: pnpm install --frozen-lockfile
-      - name: Simulate LS webhook events
-        run: pnpm exec tsx scripts/simulate-ls-webhook.ts
-        env:
-          LEMON_SQUEEZY_WEBHOOK_SECRET: "whsec_test_simulation_key"
+      - name: Verify no external payment links in Play build
+        run: |
+          echo "=== Google Play Billing Policy 4.4 Check ==="
+          # Policy 4.4: apps MUST NOT link to external payment methods for digital goods
+          VIOLATIONS=$(grep -rn "lemon\|lemonsqueezy\|ls-checkout\|paddle\.com\|stripe\.com/pay" \
+            app/ components/ hooks/ lib/ server/ --include="*.ts" --include="*.tsx" 2>/dev/null | \
+            grep -v "node_modules" | grep -v ".test." || true)
+          if [ -n "$VIOLATIONS" ]; then
+            echo "❌ VIOLAZIONE Policy 4.4: link pagamento esterni trovati:"
+            echo "$VIOLATIONS"
+            exit 1
+          fi
+          echo "✅ Nessun link pagamento esterno trovato — conforme Policy 4.4"
+          # Verifica che react-native-iap sia presente (Google Play Billing)
+          if grep -q 'react-native-iap' package.json; then
+            echo "✅ react-native-iap presente — Google Play Billing abilitato"
+          else
+            echo "⚠️  react-native-iap non trovato in package.json"
+          fi
 
   # ─── Gate 5: Ad Network Dry-Run ───
   ad-network-dry-run:
@@ -134,14 +148,13 @@ jobs:
             --config=auto \
             --include="server/routers/subscription.ts" \
             --include="server/routers/ad.ts" \
-            --include="lib/services/ls-checkout.ts" \
             --error \
             --metrics=off 2>&1 || echo "Security scan completed"
 
   # ─── Gate 7: PR Checklist Generator ───
   pr-checklist:
     runs-on: ubuntu-latest
-    needs: [typecheck, validate-schema, drizzle-check, ls-webhook-sim, ad-network-dry-run]
+    needs: [typecheck, validate-schema, drizzle-check, billing-check, ad-network-dry-run]
     if: github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
@@ -150,18 +163,19 @@ jobs:
           cat << 'EOF' > pr-checklist.md
           ## Monetization PR Checklist
 
-          ### Lemon Squeezy
-          - [ ] LS webhook HMAC-SHA256 validation tested
-          - [ ] Idempotency via lsEventId unique constraint verified
-          - [ ] Subscription lifecycle: created → active → past_due → cancelled → expired
-          - [ ] Google Play Billing Policy 4.4: No external payment links in Play APK
-          - [ ] LS checkout redirect URL works on iOS + Android + Web
+          ### Google Play Billing (react-native-iap)
+          - [ ] Policy 4.4: Nessun link pagamento esterno in build Play Store
+          - [ ] In-app purchase completato tramite Google Play Billing (react-native-iap)
+          - [ ] Subscription lifecycle: pending → active → expired → cancelled
+          - [ ] Purchase validation lato server (receiptValidation via Google Play API)
+          - [ ] Consumable vs non-consumable products configurati correttamente
+          - [ ] Test con account di test Google Play (license tester)
 
           ### Ads
           - [ ] IAB TCF 2.2 consent banner shown before AdMob SDK init
           - [ ] iOS ATT prompt calls before IDFA access
           - [ ] Rewarded ad frequency cap enforced (server-side)
-          - [ ] Ad unit IDs configured for test mode in dev builds
+          - [ ] Ad unit IDs configurati per test mode in dev builds
           - [ ] Non-personalized ads served when consent denied (npa=1)
 
           ### Privacy
@@ -169,6 +183,7 @@ jobs:
           - [ ] GDPR Art. 6(1)(a) consent logged in consentGdpr JSON
           - [ ] Right to erasure: cascade delete from users → subscriptions → receipts
           - [ ] Italian Garante: granular per-purpose consent toggles
+          - [ ] Privacy Policy: https://passeggiata-furba.vercel.app/api/privacy
 
           ### Code Quality
           - [ ] TypeScript compilation: zero errors (`pnpm tsc --noEmit`)
@@ -177,7 +192,7 @@ jobs:
           - [ ] No hardcoded API keys or secrets in committed code
 
           ### Testing
-          - [ ] LS webhook simulation: all event types processed correctly
+          - [ ] Google Play Billing dry-run: Policy 4.4 check passed
           - [ ] Ad network dry-run: mock impressions/events validated
           - [ ] Paywall A/B variant renders correctly on control + variant
 
@@ -188,15 +203,15 @@ jobs:
   # ─── Final: All Gates Passed ───
   all-gates:
     runs-on: ubuntu-latest
-    needs: [typecheck, validate-schema, drizzle-check, ls-webhook-sim, ad-network-dry-run, security-scan]
+    needs: [typecheck, validate-schema, drizzle-check, billing-check, ad-network-dry-run, security-scan]
     if: always()
     steps:
       - name: Evaluate gate results
         run: |
           echo "Gate results:"
-          echo "  TypeScript:  ${{ needs.typecheck.result }}"
-          echo "  Zod Schema:  ${{ needs.validate-schema.result }}"
-          echo "  Drizzle:     ${{ needs.drizzle-check.result }}"
-          echo "  LS Webhook:  ${{ needs.ls-webhook-sim.result }}"
-          echo "  Ad Dry-Run:  ${{ needs.ad-network-dry-run.result }}"
-          echo "  Security:    ${{ needs.security-scan.result }}"
+          echo "  TypeScript:       ${{ needs.typecheck.result }}"
+          echo "  Zod Schema:       ${{ needs.validate-schema.result }}"
+          echo "  Drizzle:          ${{ needs.drizzle-check.result }}"
+          echo "  Play Billing:     ${{ needs.billing-check.result }}"
+          echo "  Ad Dry-Run:       ${{ needs.ad-network-dry-run.result }}"
+          echo "  Security:         ${{ needs.security-scan.result }}"
