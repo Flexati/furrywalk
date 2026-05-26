@@ -1,32 +1,12 @@
-// Load environment variables with proper priority (system > .env)
-import "./scripts/load-env.js";
+// Phase 1.1 — Production config
+// Package ID: com.passeggiatafurba.app (Play Store standard format)
+// DO NOT use the manus.space timestamp ID in production — Play Store requires stable, human-readable package names.
 import type { ExpoConfig } from "expo/config";
 
-// Bundle ID format: space.manus.<project_name_dots>.<timestamp>
-// e.g., "my-app" created at 2024-01-15 10:30:45 -> "space.manus.my.app.t20240115103045"
-// Bundle ID can only contain letters, numbers, and dots
-// Android requires each dot-separated segment to start with a letter
-const rawBundleId = "space.manus.passeggiata.furba.t20260504051231";
-const bundleId =
-  rawBundleId
-    .replace(/[-_]/g, ".") // Replace hyphens/underscores with dots
-    .replace(/[^a-zA-Z0-9.]/g, "") // Remove invalid chars
-    .replace(/\.+/g, ".") // Collapse consecutive dots
-    .replace(/^\.+|\.+$/g, "") // Trim leading/trailing dots
-    .toLowerCase()
-    .split(".")
-    .map((segment) => {
-      // Android requires each segment to start with a letter
-      // Prefix with 'x' if segment starts with a digit
-      return /^[a-zA-Z]/.test(segment) ? segment : "x" + segment;
-    })
-    .join(".") || "space.manus.app";
+const bundleId = "com.passeggiatafurba.app";
 const env = {
-  // App branding - update these values directly (do not use env vars)
   appName: "Passeggiata Furba",
   appSlug: "passeggiata-furba",
-  // S3 URL of the app logo - set this to the URL returned by generate_image when creating custom logo
-  // Leave empty to use the default icon from assets/images/icon.png
   logoUrl: "https://d2xsxph8kpxj0f.cloudfront.net/310519663611683209/KDdoZNyUrVhVTvdxaK293E/splash-icon-nCKhaT5m5QUb942pk5rgS6.webp",
   scheme: "passeggiatafurba",
   iosBundleId: bundleId,
@@ -37,10 +17,13 @@ const config: ExpoConfig = {
   name: env.appName,
   slug: env.appSlug,
   version: "1.0.0",
+  // Phase 1.1: buildNumber / playStoreVersionCode pinned to 1 for v1.0.0
+  // CI overrides versionCode via -PversionCode=<N> (see release-build.yml)
   orientation: "portrait",
   icon: "./assets/images/icon.png",
   scheme: env.scheme,
-  userInterfaceStyle: "automatic",
+  // Phase 1.1 spec: light mode (no automatic dark mode in v1.0.0)
+  userInterfaceStyle: "light",
   newArchEnabled: true,
   ios: {
     supportsTablet: true,
@@ -59,16 +42,22 @@ const config: ExpoConfig = {
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
     package: env.androidPackage,
+    // Phase 1.1: Play Store versionCode 1 for initial release
+    // Auto-incremented by EAS Build (eas.json autoIncrement: true) on each production build
+    versionCode: 1,
     permissions: [
       "POST_NOTIFICATIONS",
       "ACCESS_FINE_LOCATION",
       "ACCESS_COARSE_LOCATION",
+      // Phase 1.1 compliance: CAMERA + READ_MEDIA_IMAGES for walk photo feature
       "CAMERA",
       "READ_MEDIA_IMAGES",
+      // READ/WRITE_EXTERNAL_STORAGE kept for Android < 10 compat (minSdk 24)
       "READ_EXTERNAL_STORAGE",
       "WRITE_EXTERNAL_STORAGE",
       "VIBRATE",
       "INTERNET",
+      // Phase 1.1: BILLING permission for future Google Play Billing (Phase 1.4)
       "com.android.vending.BILLING",
     ],
     intentFilters: [
@@ -125,7 +114,9 @@ const config: ExpoConfig = {
           targetSdkVersion: 35,
           buildToolsVersion: "35.0.0",
           minSdkVersion: 24,
+          // Phase 1.1: single ABI for smaller AAB (Play Store handles splits)
           buildArchs: ["arm64-v8a"],
+          // Phase 1.1: R8 + resource shrink enabled — targets bundle ≤ 35MB
           enableMinifyInReleaseBuilds: true,
           enableShrinkResourcesInReleaseBuilds: true,
         },
@@ -138,6 +129,9 @@ const config: ExpoConfig = {
           "Permetti a Passeggiata Furba di tracciare il tuo percorso durante la passeggiata.",
         locationWhenInUsePermission:
           "Permetti a Passeggiata Furba di tracciare il tuo percorso durante la passeggiata.",
+        // Phase 1.1 compliance: background location DISABLED in v1.0.0
+        // Google Play requires explicit justification for ACCESS_BACKGROUND_LOCATION.
+        // Will be re-enabled in Phase 1.5 with full policy declaration.
         isAndroidBackgroundLocationEnabled: false,
       },
     ],

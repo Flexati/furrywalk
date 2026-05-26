@@ -1,0 +1,199 @@
+{
+  "phase": "1.1",
+  "name": "Build, Sign & Expo Config",
+  "environment": "staging-release",
+  "timestamp": "2026-05-27T01:20:00+02:00",
+  "status": "PARTIAL_PASS",
+  "orchestrator": "Block Engineering Orchestrator",
+  "agents": [
+    "@security-architect-reviewer",
+    "@expo-build-architect",
+    "@code-quality-architect"
+  ],
+  "tests": [
+    {
+      "id": "T01",
+      "name": "app.config.ts package ID validation",
+      "check": "bundleId === 'com.passeggiatafurba.app'",
+      "status": "PASS",
+      "value": "com.passeggiatafurba.app",
+      "note": "Play Store standard format — was space.manus.passeggiata.furba.t20260504051231"
+    },
+    {
+      "id": "T02",
+      "name": "targetSdkVersion compliance",
+      "check": "targetSdkVersion >= 34",
+      "status": "PASS",
+      "value": 35,
+      "note": "Play Store requires >= 34 (Google enforces 35 for new apps since Aug 2024)"
+    },
+    {
+      "id": "T03",
+      "name": "minSdkVersion compliance",
+      "check": "minSdkVersion >= 24",
+      "status": "PASS",
+      "value": 24,
+      "note": "Android 7.0+ coverage"
+    },
+    {
+      "id": "T04",
+      "name": "R8 minification enabled",
+      "check": "enableMinifyInReleaseBuilds === true",
+      "status": "PASS",
+      "value": true,
+      "note": "app.config.ts expo-build-properties + build.gradle"
+    },
+    {
+      "id": "T05",
+      "name": "Resource shrinking enabled",
+      "check": "enableShrinkResourcesInReleaseBuilds === true",
+      "status": "PASS",
+      "value": true,
+      "note": "Fixed from false (default) to true"
+    },
+    {
+      "id": "T06",
+      "name": "eas.json production profile valid",
+      "check": "production.android.buildType === 'app-bundle'",
+      "status": "PASS",
+      "value": "app-bundle",
+      "note": "autoIncrement enabled, OTA channel configured"
+    },
+    {
+      "id": "T07",
+      "name": "GitHub Actions workflow syntax",
+      "check": "release-build.yml parses as valid YAML",
+      "status": "PASS",
+      "value": "valid",
+      "note": "Tag-triggered v*, bundle size gate ≤ 40MB hard limit"
+    },
+    {
+      "id": "T08",
+      "name": "Release signing fail-fast",
+      "check": "build.gradle throws GradleException if keystore missing in release build",
+      "status": "PASS",
+      "value": "fail-fast",
+      "note": "Prevents accidental debug-signed AAB upload to Play Store"
+    },
+    {
+      "id": "T09",
+      "name": "Background location disabled (Play compliance)",
+      "check": "isAndroidBackgroundLocationEnabled === false",
+      "status": "PASS",
+      "value": false,
+      "note": "Required for v1.0.0 — background location needs explicit Play Store justification"
+    },
+    {
+      "id": "T10",
+      "name": "Keystore file exists",
+      "check": "passeggiata-release.jks + keystore.b64 present in repo root",
+      "status": "PASS",
+      "value": "2794 bytes (JKS) + 3728 bytes (b64)",
+      "note": "keystore.b64 ready to be added to ANDROID_KEYSTORE_BASE64 GitHub Secret"
+    },
+    {
+      "id": "T11",
+      "name": "GitHub Secrets configured",
+      "check": "ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD",
+      "status": "PENDING",
+      "value": "unknown — requires manual verification on GitHub",
+      "note": "BLOCKER for AAB build trigger"
+    },
+    {
+      "id": "T12",
+      "name": "AAB file built and signed",
+      "check": "jarsigner -verify passeggiata-furba.aab → verified",
+      "status": "PENDING",
+      "value": "not built yet",
+      "note": "Requires: secrets configured + git tag v1.0.0 pushed"
+    },
+    {
+      "id": "T13",
+      "name": "Bundle size ≤ 35MB",
+      "check": "du -sh *.aab → ≤ 35MB",
+      "status": "PENDING",
+      "value": "pending build",
+      "note": "R8 + shrink enabled — expected ~30-35MB"
+    },
+    {
+      "id": "T14",
+      "name": "Lint zero warnings",
+      "check": "pnpm lint --max-warnings 0",
+      "status": "PENDING",
+      "value": "not run",
+      "note": "Run locally: pnpm lint"
+    }
+  ],
+  "bugs_found": [
+    {
+      "id": "BUG-001",
+      "severity": "P2",
+      "description": "Package ID was space.manus.passeggiata.furba.t20260504051231 (timestamp-based, not Play Store friendly)",
+      "fix": "Changed to com.passeggiatafurba.app in app.config.ts",
+      "status": "FIXED"
+    },
+    {
+      "id": "BUG-002",
+      "severity": "P2",
+      "description": "shrinkResources defaulted to false in buildTypes.release",
+      "fix": "Changed default to true in build.gradle",
+      "status": "FIXED"
+    },
+    {
+      "id": "BUG-003",
+      "severity": "P1",
+      "description": "Release build silently fell back to debug signing key if keystore missing",
+      "fix": "Added GradleException fail-fast in build.gradle release signingConfig",
+      "status": "FIXED"
+    },
+    {
+      "id": "BUG-004",
+      "severity": "P2",
+      "description": "userInterfaceStyle was 'automatic' — Phase 1.1 spec requires 'light'",
+      "fix": "Changed to 'light' in app.config.ts",
+      "status": "FIXED"
+    },
+    {
+      "id": "BUG-005",
+      "severity": "P2",
+      "description": "load-env.js import in app.config.ts causes side effects in production builds",
+      "fix": "Removed import, bundleId now a static constant",
+      "status": "FIXED"
+    }
+  ],
+  "metrics": {
+    "bundle_size_aab": "pending",
+    "startup_time_ms": "pending",
+    "test_coverage_pct": "pending",
+    "crash_free_rate_pct": "pending",
+    "lint_warnings": "pending",
+    "typescript_errors": 0
+  },
+  "blockers": [
+    {
+      "id": "BLOCK-001",
+      "description": "GitHub Secrets not yet verified as configured",
+      "action": "Configure ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD on GitHub repo",
+      "severity": "P0",
+      "owner": "@security-architect-reviewer"
+    }
+  ],
+  "artifacts": {
+    "eas_json": "eas.json",
+    "release_workflow": ".github/workflows/release-build.yml",
+    "app_config": "app.config.ts",
+    "build_gradle": "android/app/build.gradle",
+    "keystore_jks": "passeggiata-release.jks",
+    "keystore_b64": "keystore.b64",
+    "project_status": "PROJECT_STATUS.md",
+    "arena_report": "arena/report.json",
+    "bug_registry": "bug/registry.md"
+  },
+  "next_trigger": {
+    "command": "git tag v1.0.0 && git push origin v1.0.0",
+    "expected_output": "release-build.yml → build-release-aab → artifact uploaded",
+    "unlock_condition": "T11 + T12 + T13 PASS → STATUS: READY_FOR_1.2",
+    "phase_next": "1.2 — Privacy, Consent & Data Safety"
+  },
+  "output_flag": "READY_FOR_SECRETS_SETUP"
+}
