@@ -36,9 +36,10 @@ env:
   NODE_VERSION: "20"
   JAVA_VERSION: "17"
   # Play Store: targetSdk >= 34 (Google enforces 35 for new apps since Aug 2024)
-  ANDROID_COMPILE_SDK: "35"
+  # compileSdk 36: richiesto da Expo SDK 52 transitive deps (androidx.core 1.17+)
+  ANDROID_COMPILE_SDK: "36"
   ANDROID_TARGET_SDK: "35"
-  ANDROID_BUILD_TOOLS: "35.0.0"
+  ANDROID_BUILD_TOOLS: "36.0.0"
   ANDROID_MIN_SDK: "24"
 
 jobs:
@@ -75,7 +76,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 45
     needs: validate
-    if: ${{ github.event.inputs.build_type == 'debug' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'debug' }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -129,7 +130,7 @@ jobs:
         run: |
           cd android
           ./gradlew assembleDebug \
-            -PversionCode=${{ github.event.inputs.version_code }} \
+            -PversionCode=${{ github.event.inputs.version_code || '6' }} \
             --stacktrace
         env:
           ORG_GRADLE_PROJECT_reactNativeArchitectures: "arm64-v8a"
@@ -159,7 +160,7 @@ jobs:
           echo "| Campo | Valore |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---|" >> $GITHUB_STEP_SUMMARY
           echo "| Tipo | Debug |" >> $GITHUB_STEP_SUMMARY
-          echo "| versionCode | ${{ github.event.inputs.version_code }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| versionCode | ${{ github.event.inputs.version_code || '6' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| targetSdk | ${{ env.ANDROID_TARGET_SDK }} |" >> $GITHUB_STEP_SUMMARY
           echo "| minSdk | ${{ env.ANDROID_MIN_SDK }} |" >> $GITHUB_STEP_SUMMARY
           echo "| Dimensione | $APK_SIZE |" >> $GITHUB_STEP_SUMMARY
@@ -173,7 +174,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     needs: validate
-    if: ${{ github.event.inputs.build_type == 'release' }}
+    if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'release') }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -222,7 +223,7 @@ jobs:
           echo "targetSdkVersion atteso: ${{ env.ANDROID_TARGET_SDK }} (Play Store richiede >= 34)"
           echo "compileSdkVersion atteso: ${{ env.ANDROID_COMPILE_SDK }}"
           echo "minSdkVersion atteso: ${{ env.ANDROID_MIN_SDK }}"
-          echo "versionCode: ${{ github.event.inputs.version_code }}"
+          echo "versionCode: ${{ github.event.inputs.version_code || '6' }}"
           # Verifica che la config sia stata applicata dal prebuild
           if grep -q "targetSdkVersion" android/gradle.properties; then
             TARGET=$(grep "android.targetSdkVersion" android/gradle.properties | cut -d= -f2 | tr -d ' ')
@@ -234,39 +235,6 @@ jobs:
             echo "✅ targetSdkVersion=$TARGET OK"
           else
             echo "⚠️  targetSdkVersion non in gradle.properties — sarà impostato dall'ext block"
-          fi
-
-      - name: Pin androidx core/activity/fragment/lifecycle for compileSdk 35 compat
-        run: |
-          # Expo SDK 52 transitive deps richiedono compileSdk 36,
-          # noi siamo su 35. Forza risoluzione a versioni compatibili.
-          set +e
-          F=android/build.gradle
-          if ! grep -q "PINNED_ANDROIDX_FOR_PLAYSET_2025" "$F"; then
-            echo "" >> "$F"
-            echo "// PINNED_ANDROIDX_FOR_PLAYSET_2025 - compat compileSdk 35" >> "$F"
-            cat >> "$F" << 'GRADLE'
-          allprojects {
-            configurations.all {
-              resolutionStrategy {
-                force 'androidx.core:core:1.13.1'
-                force 'androidx.core:core-ktx:1.13.1'
-                force 'androidx.activity:activity:1.9.3'
-                force 'androidx.activity:activity-ktx:1.9.3'
-                force 'androidx.fragment:fragment:1.8.5'
-                force 'androidx.lifecycle:lifecycle-runtime:2.8.7'
-                force 'androidx.lifecycle:lifecycle-runtime-ktx:2.8.7'
-                force 'androidx.lifecycle:lifecycle-process:2.8.7'
-                force 'androidx.savedstate:savedstate:1.2.1'
-                force 'androidx.savedstate:savedstate-ktx:1.2.1'
-              }
-            }
-          }
-          GRADLE
-            echo "✅ androidx pinned per compileSdk 35"
-            tail -20 "$F"
-          else
-            echo "✅ androidx già pinned"
           fi
 
       - name: Add R8 keep rules for Expo Modules (ImagePicker)
@@ -334,7 +302,7 @@ PROGUARD
           cd android
           set -o pipefail
           ./gradlew bundleRelease \
-            -PversionCode=${{ github.event.inputs.version_code }} \
+            -PversionCode=${{ github.event.inputs.version_code || '6' }} \
             --stacktrace 2>&1 | tee /tmp/gradle.log | tail -150
           echo "=== END GRADLE (exit=$? ) ==="
         env:
@@ -381,7 +349,7 @@ PROGUARD
       - name: Upload AAB — Play Store Ready
         uses: actions/upload-artifact@v4
         with:
-          name: passeggiata-furba-release-aab-vc${{ github.event.inputs.version_code }}
+          name: passeggiata-furba-release-aab-vc${{ github.event.inputs.version_code || '6' }}
           path: ${{ steps.find-aab.outputs.aab_path }}
           # 90 giorni: abbastanza per il processo di review Play Store
           retention-days: 90
@@ -393,7 +361,7 @@ PROGUARD
           echo "| Campo | Valore |" >> $GITHUB_STEP_SUMMARY
           echo "|---|---|" >> $GITHUB_STEP_SUMMARY
           echo "| Tipo | AAB Release (firmato) |" >> $GITHUB_STEP_SUMMARY
-          echo "| versionCode | ${{ github.event.inputs.version_code }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| versionCode | ${{ github.event.inputs.version_code || '6' }} |" >> $GITHUB_STEP_SUMMARY
           echo "| versionName | 1.0.0 |" >> $GITHUB_STEP_SUMMARY
           echo "| targetSdkVersion | ${{ env.ANDROID_TARGET_SDK }} ✅ |" >> $GITHUB_STEP_SUMMARY
           echo "| compileSdkVersion | ${{ env.ANDROID_COMPILE_SDK }} ✅ |" >> $GITHUB_STEP_SUMMARY
