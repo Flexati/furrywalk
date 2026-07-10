@@ -30,7 +30,8 @@ on:
         required: true
         default: "6"
         type: string
-
+  push:
+    branches: [main]
 env:
   NODE_VERSION: "20"
   JAVA_VERSION: "17"
