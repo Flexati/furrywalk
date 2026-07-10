@@ -273,10 +273,11 @@ jobs:
       - name: Build Release AAB (Play Store)
         run: |
           cd android
+          set -o pipefail
           ./gradlew bundleRelease \
             -PversionCode=${{ github.event.inputs.version_code }} \
-            --stacktrace \
-            --info 2>&1 | tail -100
+            --stacktrace 2>&1 | tee /tmp/gradle.log | tail -150
+          echo "=== END GRADLE (exit=$? ) ==="
         env:
           ORG_GRADLE_PROJECT_reactNativeArchitectures: "arm64-v8a"
           MYAPP_RELEASE_STORE_FILE: "release.jks"
