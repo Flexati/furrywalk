@@ -1,17 +1,3 @@
-# ─── Passeggiata Furba — Android Build (APK + AAB) ───────────────────────────
-# Play Store compliance: targetSdk 35, minSdk 24, arm64-v8a, signed AAB
-#
-# Secrets richiesti (GitHub → Settings → Secrets → Actions):
-#   ANDROID_KEYSTORE_BASE64      base64 del file .jks
-#   ANDROID_KEYSTORE_PASSWORD    password del keystore
-#   ANDROID_KEY_ALIAS            alias della chiave
-#   ANDROID_KEY_PASSWORD         password della chiave
-#   EXPO_PUBLIC_SUPABASE_URL     (opzionale)
-#   EXPO_PUBLIC_SUPABASE_ANON_KEY (opzionale)
-#
-# Avvio manuale: Actions → "Build Android" → Run workflow
-# ─────────────────────────────────────────────────────────────────────────────
-
 name: Build Android
 
 on:
@@ -26,352 +12,161 @@ on:
           - debug
           - release
       version_code:
-        description: "versionCode (intero, deve essere > del precedente su Play Store)"
+        description: "versionCode"
         required: true
         default: "6"
         type: string
   push:
     branches:
       - main
+
 env:
   NODE_VERSION: "20"
   JAVA_VERSION: "17"
-  # Play Store: targetSdk >= 34 (Google enforces 35 for new apps since Aug 2024)
-  # compileSdk 36: richiesto da Expo SDK 52 transitive deps (androidx.core 1.17+)
   ANDROID_COMPILE_SDK: "36"
   ANDROID_TARGET_SDK: "35"
   ANDROID_BUILD_TOOLS: "36.0.0"
   ANDROID_MIN_SDK: "24"
 
 jobs:
-  # ─────────────────────────────────────────────────────────────────────────────
-  # JOB 1: Validate — TypeScript check before any build
-  # ─────────────────────────────────────────────────────────────────────────────
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: "9.12.0"
-
-      - name: Install dependencies
+      - name: Install deps
         run: pnpm install --frozen-lockfile
-
       - name: TypeScript check
         run: pnpm tsc --noEmit
 
-  # ─────────────────────────────────────────────────────────────────────────────
-  # JOB 2: Build APK (Debug) — per test interni
-  # ─────────────────────────────────────────────────────────────────────────────
-  build-debug-apk:
-    runs-on: ubuntu-latest
-    timeout-minutes: 45
-    needs: validate
-    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'debug' }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: "9.12.0"
-
-      - name: Setup Java ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v4
-        with:
-          distribution: "temurin"
-          java-version: ${{ env.JAVA_VERSION }}
-
-      - name: Setup Android SDK (API ${{ env.ANDROID_COMPILE_SDK }})
-        uses: android-actions/setup-android@v3
-        with:
-          packages: >-
-            platforms;android-${{ env.ANDROID_COMPILE_SDK }}
-            build-tools;${{ env.ANDROID_BUILD_TOOLS }}
-            platforms;android-${{ env.ANDROID_MIN_SDK }}
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Expo Prebuild (Android)
-        run: yes | npx expo prebuild --platform android --clean
-        env:
-          CI: true
-          EXPO_PUBLIC_API_BASE_URL: "https://passeggiata-furba.vercel.app"
-          EXPO_PUBLIC_APP_SCHEME: "passeggiatafurba"
-          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL || '' }}
-          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY || '' }}
-
-      - name: Make Gradlew executable
-        run: chmod +x android/gradlew
-
-      - name: Verify targetSdkVersion
-        run: |
-          echo "=== Verifica targetSdkVersion ==="
-          grep -i "targetSdkVersion\|compileSdkVersion\|minSdkVersion" android/gradle.properties || true
-          grep -i "targetSdkVersion\|compileSdkVersion" android/app/build.gradle || true
-
-      - name: Build Debug APK
-        run: |
-          cd android
-          ./gradlew assembleDebug \
-            -PversionCode=${{ github.event.inputs.version_code || '6' }} \
-            --stacktrace
-        env:
-          ORG_GRADLE_PROJECT_reactNativeArchitectures: "arm64-v8a"
-          EXPO_PUBLIC_API_BASE_URL: "https://passeggiata-furba.vercel.app"
-          EXPO_PUBLIC_APP_SCHEME: "passeggiatafurba"
-          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL || '' }}
-          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY || '' }}
-
-      - name: Find APK
-        id: find-apk
-        run: |
-          APK=$(find android/app/build/outputs/apk/debug -name "*.apk" | head -1)
-          echo "apk_path=$APK" >> $GITHUB_OUTPUT
-          echo "APK: $APK ($(du -h "$APK" | cut -f1))"
-
-      - name: Upload Debug APK
-        uses: actions/upload-artifact@v4
-        with:
-          name: passeggiata-furba-debug-apk-vc${{ github.event.inputs.version_code }}
-          path: ${{ steps.find-apk.outputs.apk_path }}
-          retention-days: 14
-
-      - name: Build summary
-        run: |
-          APK_SIZE=$(du -h "${{ steps.find-apk.outputs.apk_path }}" | cut -f1)
-          echo "### ✅ Debug APK" >> $GITHUB_STEP_SUMMARY
-          echo "| Campo | Valore |" >> $GITHUB_STEP_SUMMARY
-          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
-          echo "| Tipo | Debug |" >> $GITHUB_STEP_SUMMARY
-          echo "| versionCode | ${{ github.event.inputs.version_code || '6' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| targetSdk | ${{ env.ANDROID_TARGET_SDK }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| minSdk | ${{ env.ANDROID_MIN_SDK }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Dimensione | $APK_SIZE |" >> $GITHUB_STEP_SUMMARY
-          echo "| Architettura | arm64-v8a |" >> $GITHUB_STEP_SUMMARY
-
-  # ─────────────────────────────────────────────────────────────────────────────
-  # JOB 3: Build Release AAB — per Google Play Store
-  # Produce un AAB firmato pronto per Production/Internal Testing
-  # ─────────────────────────────────────────────────────────────────────────────
   build-release-aab:
     runs-on: ubuntu-latest
     timeout-minutes: 60
     needs: validate
     if: ${{ github.event_name == 'push' || github.event.inputs.build_type == 'release' }}
     steps:
-      - name: Checkout repository
+      - name: Checkout
         uses: actions/checkout@v4
-
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
-
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: "9.12.0"
-
-      - name: Setup Java ${{ env.JAVA_VERSION }}
+      - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: "temurin"
           java-version: ${{ env.JAVA_VERSION }}
-
-      - name: Setup Android SDK (API ${{ env.ANDROID_COMPILE_SDK }})
+      - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: >-
-            platforms;android-${{ env.ANDROID_COMPILE_SDK }}
-            build-tools;${{ env.ANDROID_BUILD_TOOLS }}
-
-      - name: Install dependencies
+          packages: "platforms;android-36 build-tools;36.0.0"
+      - name: Install deps
         run: pnpm install --frozen-lockfile
-
-      - name: Expo Prebuild (Android)
+      - name: Expo Prebuild
         run: yes | npx expo prebuild --platform android --clean
         env:
-          CI: true
-          EXPO_PUBLIC_API_BASE_URL: "https://passeggiata-furba.vercel.app"
-          EXPO_PUBLIC_APP_SCHEME: "passeggiatafurba"
-          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL || '' }}
-          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY || '' }}
-
-      - name: Make Gradlew executable
+          CI: "true"
+      - name: Make gradlew executable
         run: chmod +x android/gradlew
-
-      - name: Verify Play Store compliance
-        run: |
-          echo "=== Play Store Compliance Check ==="
-          echo "targetSdkVersion atteso: ${{ env.ANDROID_TARGET_SDK }} (Play Store richiede >= 34)"
-          echo "compileSdkVersion atteso: ${{ env.ANDROID_COMPILE_SDK }}"
-          echo "minSdkVersion atteso: ${{ env.ANDROID_MIN_SDK }}"
-          echo "versionCode: ${{ github.event.inputs.version_code || '6' }}"
-          # Verifica che la config sia stata applicata dal prebuild
-          if grep -q "targetSdkVersion" android/gradle.properties; then
-            TARGET=$(grep "android.targetSdkVersion" android/gradle.properties | cut -d= -f2 | tr -d ' ')
-            echo "targetSdkVersion in gradle.properties: $TARGET"
-            if [ "$TARGET" -lt 34 ] 2>/dev/null; then
-              echo "❌ ERRORE: targetSdkVersion=$TARGET < 34 (Play Store non accetta!)"
-              exit 1
-            fi
-            echo "✅ targetSdkVersion=$TARGET OK"
-          else
-            echo "⚠️  targetSdkVersion non in gradle.properties — sarà impostato dall'ext block"
-          fi
-
-      - name: Add R8 keep rules for Expo Modules (ImagePicker)
-        run: |
-          # R8 minifier rimuove expo.modules.kotlin.services.Service, rompe expo-imagepicker.
-          # Iniettiamo regole ProGuard custom prima del build.
-          set +e
-          F=android/app/proguard-rules.pro
-          mkdir -p "$(dirname "$F")"
-          touch "$F"
-          if ! grep -q "FW_PROGUARD_EXPO_KOTLIN_SERVICES_2025" "$F"; then
-            cat >> "$F" << 'PROGUARD'
-
-# FW_PROGUARD_EXPO_KOTLIN_SERVICES_2025
--keep interface expo.modules.kotlin.services.** { *; }
--keep class expo.modules.imagepicker.** { *; }
--keep class expo.modules.kotlin.** { *; }
--keep class expo.modules.filesystem.** { *; }
--keep class expo.modules.notifications.** { *; }
--keep class expo.modules.av.** { *; }
-PROGUARD
-            echo "✅ ProGuard R8 keep rules iniettate"
-            tail -15 "$F"
-          else
-            echo "✅ ProGuard R8 keep rules già presenti"
-          fi
-
       - name: Decode keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         run: |
-          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
-            echo "❌ ERRORE: secret ANDROID_KEYSTORE_BASE64 mancante." >&2
-            echo "   Vai su GitHub → Settings → Secrets → Actions e aggiungi:"
-            echo "   ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD"
-            exit 1
-          fi
           echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/release.jks
-          BYTES=$(wc -c < android/app/release.jks)
-          echo "✅ Keystore decodificato: $BYTES bytes"
-          if [ "$BYTES" -lt 100 ]; then
-            echo "❌ ERRORE: keystore troppo piccolo ($BYTES bytes) — base64 probabilmente corrotto." >&2
-            exit 1
-          fi
-
-      - name: Configure release signing in gradle.properties
+          echo "Keystore: $(wc -c < android/app/release.jks) bytes"
+      - name: Configure signing
         env:
           KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
-          # Trailing newline guard (previene corruzione tipo "24MYAPP_RELEASE_STORE_FILE")
           echo "" >> android/gradle.properties
-          cat >> android/gradle.properties << 'EOF'
-          MYAPP_RELEASE_STORE_FILE=release.jks
-          EOF
-          # Aggiungi le credenziali senza heredoc (sicuro con caratteri speciali)
+          echo "MYAPP_RELEASE_STORE_FILE=release.jks" >> android/gradle.properties
           echo "MYAPP_RELEASE_KEY_ALIAS=${KEY_ALIAS}" >> android/gradle.properties
           echo "MYAPP_RELEASE_STORE_PASSWORD=${KEYSTORE_PASSWORD}" >> android/gradle.properties
           echo "MYAPP_RELEASE_KEY_PASSWORD=${KEY_PASSWORD}" >> android/gradle.properties
-          echo "✅ Signing config iniettata in gradle.properties"
-
-      - name: Build Release AAB (Play Store)
+      - name: Build Release AAB
         run: |
           cd android
           set -o pipefail
-          ./gradlew bundleRelease \
-            -PversionCode=${{ github.event.inputs.version_code || '6' }} \
-            --stacktrace 2>&1 | tee /tmp/gradle.log | tail -150
-          echo "=== END GRADLE (exit=$? ) ==="
+          ./gradlew bundleRelease -PversionCode=${{ github.event.inputs.version_code || '6' }} --stacktrace 2>&1 | tee /tmp/gradle.log | tail -100
         env:
           ORG_GRADLE_PROJECT_reactNativeArchitectures: "arm64-v8a"
-          MYAPP_RELEASE_STORE_FILE: "release.jks"
-          MYAPP_RELEASE_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          MYAPP_RELEASE_STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          MYAPP_RELEASE_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-          EXPO_PUBLIC_API_BASE_URL: "https://passeggiata-furba.vercel.app"
-          EXPO_PUBLIC_APP_SCHEME: "passeggiatafurba"
-          EXPO_PUBLIC_SUPABASE_URL: ${{ secrets.EXPO_PUBLIC_SUPABASE_URL || '' }}
-          EXPO_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.EXPO_PUBLIC_SUPABASE_ANON_KEY || '' }}
-
-      - name: Find AAB file
+      - name: Find AAB
         id: find-aab
         run: |
-          set +e
-          echo "=== Cerca AAB ovunque in android/ ==="
-          echo "--- Dump struttura outputs ---"
-          find android -type d -name "outputs" 2>/dev/null
-          echo "--- Cerca APK e AAB ---"
-          find android -type f \( -name "*.apk" -o -name "*.aab" \) 2>/dev/null
-          echo "--- Cerca qualsiasi file in build/ ---"
-          find android/app/build -type f 2>/dev/null | head -30
-          echo "--- INIZIO find AAB ---"
-          AAB=$(find android -name "*.aab" -type f 2>/dev/null | head -1)
-          if [ -z "$AAB" ]; then
-            echo "❌ Nessun AAB trovato!"
-            exit 1
-          fi
-          SIZE=$(du -h "$AAB" | cut -f1)
+          AAB=$(find android -name "*.aab" -type f | head -1)
+          if [ -z "$AAB" ]; then echo "No AAB found"; find android -type f \( -name "*.aab" -o -name "*.apk" \) 2>/dev/null; exit 1; fi
           echo "aab_path=$AAB" >> $GITHUB_OUTPUT
-          echo "aab_size=$SIZE" >> $GITHUB_OUTPUT
-          echo "✅ AAB trovato: $AAB ($SIZE)"
-
-      - name: Verify AAB signature
-        run: |
-          # Quick sanity: AAB deve avere una firma valida (non debug key)
-          AAB="${{ steps.find-aab.outputs.aab_path }}"
-          echo "=== AAB info ==="
-          unzip -p "$AAB" META-INF/MANIFEST.MF 2>/dev/null | head -5 || echo "(manifest non leggibile direttamente — normale per AAB)"
-          echo "Dimensione finale: ${{ steps.find-aab.outputs.aab_size }}"
-
-      - name: Upload AAB — Play Store Ready
+          echo "AAB: $AAB ($(du -h "$AAB" | cut -f1))"
+      - name: Upload AAB
         uses: actions/upload-artifact@v4
         with:
           name: passeggiata-furba-release-aab-vc${{ github.event.inputs.version_code || '6' }}
           path: ${{ steps.find-aab.outputs.aab_path }}
-          # 90 giorni: abbastanza per il processo di review Play Store
           retention-days: 90
 
-      - name: Build summary
+  build-debug-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    needs: validate
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.build_type == 'debug' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: "9.12.0"
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: ${{ env.JAVA_VERSION }}
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: "platforms;android-36 build-tools;36.0.0"
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+      - name: Expo Prebuild
+        run: yes | npx expo prebuild --platform android --clean
+        env:
+          CI: "true"
+      - name: Make gradlew executable
+        run: chmod +x android/gradlew
+      - name: Build Debug APK
         run: |
-          echo "### ✅ Release AAB — Pronto per Play Store" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Campo | Valore |" >> $GITHUB_STEP_SUMMARY
-          echo "|---|---|" >> $GITHUB_STEP_SUMMARY
-          echo "| Tipo | AAB Release (firmato) |" >> $GITHUB_STEP_SUMMARY
-          echo "| versionCode | ${{ github.event.inputs.version_code || '6' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| versionName | 1.0.0 |" >> $GITHUB_STEP_SUMMARY
-          echo "| targetSdkVersion | ${{ env.ANDROID_TARGET_SDK }} ✅ |" >> $GITHUB_STEP_SUMMARY
-          echo "| compileSdkVersion | ${{ env.ANDROID_COMPILE_SDK }} ✅ |" >> $GITHUB_STEP_SUMMARY
-          echo "| minSdkVersion | ${{ env.ANDROID_MIN_SDK }} (Android 7.0+) |" >> $GITHUB_STEP_SUMMARY
-          echo "| Architettura | arm64-v8a |" >> $GITHUB_STEP_SUMMARY
-          echo "| Dimensione | ${{ steps.find-aab.outputs.aab_size }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| R8 Minify | ✅ abilitato |" >> $GITHUB_STEP_SUMMARY
-          echo "| Resource Shrink | ✅ abilitato |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Prossimo step:** Scarica l'artifact e caricalo su Play Console → Internal Testing" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Privacy Policy:** https://passeggiata-furba.vercel.app/api/privacy" >> $GITHUB_STEP_SUMMARY
+          cd android
+          ./gradlew assembleDebug -PversionCode=${{ github.event.inputs.version_code || '6' }}
+        env:
+          ORG_GRADLE_PROJECT_reactNativeArchitectures: "arm64-v8a"
+      - name: Find APK
+        id: find-apk
+        run: |
+          APK=$(find android/app/build/outputs/apk/debug -name "*.apk" | head -1)
+          echo "apk_path=$APK" >> $GITHUB_OUTPUT
+          echo "APK: $APK"
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: passeggiata-furba-debug-apk-vc${{ github.event.inputs.version_code || '6' }}
+          path: ${{ steps.find-apk.outputs.apk_path }}
+          retention-days: 14
