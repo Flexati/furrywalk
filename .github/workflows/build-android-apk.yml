@@ -268,6 +268,31 @@ jobs:
             echo "✅ androidx già pinned"
           fi
 
+      - name: Add R8 keep rules for Expo Modules (ImagePicker)
+        run: |
+          # R8 minifier rimuove expo.modules.kotlin.services.Service, rompe expo-imagepicker.
+          # Iniettiamo regole ProGuard custom prima del build.
+          set +e
+          F=android/app/proguard-rules.pro
+          mkdir -p "$(dirname "$F")"
+          touch "$F"
+          if ! grep -q "FW_PROGUARD_EXPO_KOTLIN_SERVICES_2025" "$F"; then
+            cat >> "$F" << 'PROGUARD'
+
+# FW_PROGUARD_EXPO_KOTLIN_SERVICES_2025
+-keep interface expo.modules.kotlin.services.** { *; }
+-keep class expo.modules.imagepicker.** { *; }
+-keep class expo.modules.kotlin.** { *; }
+-keep class expo.modules.filesystem.** { *; }
+-keep class expo.modules.notifications.** { *; }
+-keep class expo.modules.av.** { *; }
+PROGUARD
+            echo "✅ ProGuard R8 keep rules iniettate"
+            tail -15 "$F"
+          else
+            echo "✅ ProGuard R8 keep rules già presenti"
+          fi
+
       - name: Decode keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
