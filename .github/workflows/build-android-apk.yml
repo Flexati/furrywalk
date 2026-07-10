@@ -291,10 +291,10 @@ jobs:
       - name: Find AAB file
         id: find-aab
         run: |
-          AAB=$(find android/app/build/outputs/bundle/release -name "*.aab" | head -1)
+          AAB=$(find android -name "*.aab" -path "*/bundle/release/*" | head -1)
           if [ -z "$AAB" ]; then
             echo "❌ Nessun AAB trovato!" >&2
-            find android/app/build/outputs -type f | head -20
+            find android -name "*.aab" -type f | head -20
             exit 1
           fi
           SIZE=$(du -h "$AAB" | cut -f1)
