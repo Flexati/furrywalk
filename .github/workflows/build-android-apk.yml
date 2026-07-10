@@ -235,19 +235,37 @@ jobs:
             echo "⚠️  targetSdkVersion non in gradle.properties — sarà impostato dall'ext block"
           fi
 
-      - name: Pin androidx.core for compileSdk 35 compat
+      - name: Pin androidx core/activity/fragment/lifecycle for compileSdk 35 compat
         run: |
-          # androidx.core 1.17.0 (richiesto da Expo SDK 52 transitive deps) richiede compileSdk 36;
-          # noi siamo su 35. Forza risoluzione a 1.15.0 (l'ultima compatibile).
+          # Expo SDK 52 transitive deps richiedono compileSdk 36,
+          # noi siamo su 35. Forza risoluzione a versioni compatibili.
           set +e
           F=android/build.gradle
-          if ! grep -q "force 'androidx.core:core:1.15.0'" "$F"; then
+          if ! grep -q "PINNED_ANDROIDX_FOR_PLAYSET_2025" "$F"; then
             echo "" >> "$F"
-            echo "// GH Actions: pin androidx.core per compileSdk 35" >> "$F"
-            echo "allprojects { configurations.all { resolutionStrategy { force 'androidx.core:core:1.15.0'; force 'androidx.core:core-ktx:1.15.0' } } }" >> "$F"
-            echo "✅ androidx.core pinned a 1.15.0"
+            echo "// PINNED_ANDROIDX_FOR_PLAYSET_2025 - compat compileSdk 35" >> "$F"
+            cat >> "$F" << 'GRADLE'
+          allprojects {
+            configurations.all {
+              resolutionStrategy {
+                force 'androidx.core:core:1.13.1'
+                force 'androidx.core:core-ktx:1.13.1'
+                force 'androidx.activity:activity:1.9.3'
+                force 'androidx.activity:activity-ktx:1.9.3'
+                force 'androidx.fragment:fragment:1.8.5'
+                force 'androidx.lifecycle:lifecycle-runtime:2.8.7'
+                force 'androidx.lifecycle:lifecycle-runtime-ktx:2.8.7'
+                force 'androidx.lifecycle:lifecycle-process:2.8.7'
+                force 'androidx.savedstate:savedstate:1.2.1'
+                force 'androidx.savedstate:savedstate-ktx:1.2.1'
+              }
+            }
+          }
+          GRADLE
+            echo "✅ androidx pinned per compileSdk 35"
+            tail -20 "$F"
           else
-            echo "✅ androidx.core già pinned"
+            echo "✅ androidx già pinned"
           fi
 
       - name: Decode keystore
