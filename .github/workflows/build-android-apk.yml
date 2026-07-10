@@ -235,6 +235,21 @@ jobs:
             echo "⚠️  targetSdkVersion non in gradle.properties — sarà impostato dall'ext block"
           fi
 
+      - name: Pin androidx.core for compileSdk 35 compat
+        run: |
+          # androidx.core 1.17.0 (richiesto da Expo SDK 52 transitive deps) richiede compileSdk 36;
+          # noi siamo su 35. Forza risoluzione a 1.15.0 (l'ultima compatibile).
+          set +e
+          F=android/build.gradle
+          if ! grep -q "force 'androidx.core:core:1.15.0'" "$F"; then
+            echo "" >> "$F"
+            echo "// GH Actions: pin androidx.core per compileSdk 35" >> "$F"
+            echo "allprojects { configurations.all { resolutionStrategy { force 'androidx.core:core:1.15.0'; force 'androidx.core:core-ktx:1.15.0' } } }" >> "$F"
+            echo "✅ androidx.core pinned a 1.15.0"
+          else
+            echo "✅ androidx.core già pinned"
+          fi
+
       - name: Decode keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
