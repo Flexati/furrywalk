@@ -84,12 +84,12 @@ jobs:
       - name: R8 ProGuard keep rules
         run: |
           mkdir -p android/app
-          cat >> android/app/proguard-rules.pro << 'PROGUARD'
-# Keep expo.modules for R8 minifier (ImagePicker)
--keep interface expo.modules.kotlin.services.** { *; }
--keep class expo.modules.imagepicker.** { *; }
--keep class expo.modules.kotlin.** { *; }
-PROGUARD
+          printf '%s\n' \
+            "# Keep expo.modules for R8 minifier" \
+            "-keep interface expo.modules.kotlin.services.** { *; }" \
+            "-keep class expo.modules.imagepicker.** { *; }" \
+            "-keep class expo.modules.kotlin.** { *; }" \
+            >> android/app/proguard-rules.pro
           echo "ProGuard keep rules added"
       - name: Decode keystore
         env:
