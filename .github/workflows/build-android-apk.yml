@@ -96,12 +96,26 @@ jobs:
             "-keep class expo.modules.imagepicker.exporters.**\$* { *; }" \
             "# Keep all expo-modules-kotlin classes" \
             "-keep class expo.modules.kotlin.** { *; }" \
+            "# Suppress Missing class errors if expo-modules-kotlin not in classpath" \
+            "-dontwarn expo.modules.kotlin.services.**" \
+            "-dontwarn expo.modules.kotlin.**" \
             >> android/app/proguard-rules.pro
           echo "ProGuard keep rules added"
       - name: Verify ProGuard rules
         run: |
           echo "=== android/app/proguard-rules.pro ==="
           cat android/app/proguard-rules.pro
+      - name: Add expo-modules-kotlin dependency (fix Missing class for R8)
+        run: |
+          # Expo autolinking may not include expo-modules-kotlin in compile classpath for R8
+          # Add it explicitly to app/build.gradle dependencies block
+          sed -i '/dependencies {/a\    implementation "expo.modules.kotlin:expo-modules-kotlin:+"' android/app/build.gradle
+          echo "Added expo-modules-kotlin dependency"
+          grep -A 20 "dependencies {" android/app/build.gradle | head -25
+      - name: Debug Gradle dependencies
+        run: |
+          cd android
+          ./gradlew :app:dependencies --configuration releaseCompileClasspath 2>&1 | grep -E "(expo.modules.kotlin|expo-modules-kotlin)" || echo "expo-modules-kotlin NOT found in releaseCompileClasspath"
       - name: Decode keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
