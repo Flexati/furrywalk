@@ -81,6 +81,16 @@ jobs:
           CI: "true"
       - name: Make gradlew executable
         run: chmod +x android/gradlew
+      - name: R8 ProGuard keep rules
+        run: |
+          mkdir -p android/app
+          cat >> android/app/proguard-rules.pro << 'PROGUARD'
+# Keep expo.modules for R8 minifier (ImagePicker)
+-keep interface expo.modules.kotlin.services.** { *; }
+-keep class expo.modules.imagepicker.** { *; }
+-keep class expo.modules.kotlin.** { *; }
+PROGUARD
+          echo "ProGuard keep rules added"
       - name: Decode keystore
         env:
           ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
