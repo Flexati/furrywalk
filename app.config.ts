@@ -116,9 +116,11 @@ const config: ExpoConfig = {
           minSdkVersion: 24,
           // Phase 1.1: single ABI for smaller AAB (Play Store handles splits)
           buildArchs: ["arm64-v8a"],
-          // Phase 1.1: R8 + resource shrink enabled — targets bundle ≤ 35MB
-          enableMinifyInReleaseBuilds: true,
-          enableShrinkResourcesInReleaseBuilds: true,
+          // R8 minification disabled: AGP 8.x full-mode R8 fails the bundle
+          // step on transitive dependency classes (CompilationFailedException).
+          // Re-enable once keep rules are validated; AAB is larger but builds.
+          enableMinifyInReleaseBuilds: false,
+          enableShrinkResourcesInReleaseBuilds: false,
         },
       },
     ],
