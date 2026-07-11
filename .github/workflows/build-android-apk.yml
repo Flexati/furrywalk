@@ -23,8 +23,8 @@ on:
 env:
   NODE_VERSION: "20"
   JAVA_VERSION: "17"
-  ANDROID_COMPILE_SDK: "35"
-  ANDROID_TARGET_SDK: "35"
+  ANDROID_COMPILE_SDK: "36"
+  ANDROID_TARGET_SDK: "36"
   ANDROID_BUILD_TOOLS: "35.0.0"
   ANDROID_MIN_SDK: "24"
 
@@ -72,7 +72,7 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: "platforms;android-35 build-tools;35.0.0"
+          packages: "platforms;android-36 build-tools;35.0.0"
       - name: Install deps
         run: pnpm install --frozen-lockfile
       - name: Expo Prebuild
@@ -171,7 +171,7 @@ jobs:
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: "platforms;android-35 build-tools;35.0.0"
+          packages: "platforms;android-36 build-tools;35.0.0"
       - name: Install deps
         run: pnpm install --frozen-lockfile
       - name: Expo Prebuild

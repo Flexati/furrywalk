@@ -110,8 +110,8 @@ const config: ExpoConfig = {
       "expo-build-properties",
       {
         android: {
-          compileSdkVersion: 35,
-          targetSdkVersion: 35,
+          compileSdkVersion: 36,
+          targetSdkVersion: 36,
           buildToolsVersion: "35.0.0",
           minSdkVersion: 24,
           // Phase 1.1: single ABI for smaller AAB (Play Store handles splits)
