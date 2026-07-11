@@ -151,6 +151,6 @@ export const subscriptionRouter = router({
         })
         .where(eq(adTiers.userId, ctx.user.id));
 
-      return { synced: true, tier: mapping.tier };
+      return { synced: true, tier: mapping.tier, alreadyRecorded: false };
     }),
 });

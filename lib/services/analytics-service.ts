@@ -178,7 +178,7 @@ class AnalyticsService {
 
       if (dayDiff === 1) {
         tempStreak++;
-        if (i === 1) currentStreak = tempStreak;
+        if (currentStreak === tempStreak - 1) currentStreak = tempStreak;
       } else {
         if (tempStreak > longestStreak) longestStreak = tempStreak;
         tempStreak = 1;
