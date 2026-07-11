@@ -33,7 +33,7 @@ export const i18n = new I18n(translations);
 i18n.enableFallback = true;
 // Set the locale once at the beginning of your app.
 const locales = getLocales();
-i18n.locale = locales && locales.length > 0 ? locales[0].languageCode : 'it';
+i18n.locale = locales.length > 0 ? locales[0].languageCode ?? 'it' : 'it';
 
 export const setLanguage = (lang: string) => {
   i18n.locale = lang;

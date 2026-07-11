@@ -51,9 +51,9 @@ export function rateLimit(options: { windowMs: number; max: number; message?: st
 
 // Periodically sweep expired buckets so the map doesn't grow unbounded on
 // long-lived standalone server processes.
-setInterval(() => {
+(setInterval(() => {
   const now = Date.now();
   for (const [key, bucket] of buckets) {
     if (bucket.resetAt <= now) buckets.delete(key);
   }
-}, 60_000).unref?.();
+}, 60_000) as unknown as { unref?: () => void }).unref?.();
