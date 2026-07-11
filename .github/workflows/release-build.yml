@@ -241,6 +241,11 @@ jobs:
           echo "   STORE_FILE: release.jks"
           echo "   KEY_ALIAS: ${KEY_ALIAS}"
 
+      - name: Patch build.gradle for Release Signing
+        run: |
+          sed -i 's/signingConfig signingConfigs.debug/signingConfig signingConfigs.release/g' android/app/build.gradle
+          sed -i '/signingConfigs {/a \        release {\n            storeFile file(project.property("MYAPP_RELEASE_STORE_FILE"))\n            storePassword project.property("MYAPP_RELEASE_STORE_PASSWORD")\n            keyAlias project.property("MYAPP_RELEASE_KEY_ALIAS")\n            keyPassword project.property("MYAPP_RELEASE_KEY_PASSWORD")\n        }' android/app/build.gradle
+
       # ─── AAB BUILD ────────────────────────────────────────────────────────────
       - name: Build Release AAB (bundleRelease)
         run: |

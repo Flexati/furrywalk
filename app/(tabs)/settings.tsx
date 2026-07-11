@@ -5,6 +5,7 @@ import { Storage } from "@/lib/services/storage";
 import { useRouter } from "expo-router";
 import { useSubscription } from "@/hooks/use-subscription";
 import Constants from "expo-constants";
+import { i18n, setLanguage } from "@/lib/i18n";
 
 const APP_VERSION = Constants.expoConfig?.version ?? "1.0.0";
 const PRIVACY_POLICY_URL = "https://passeggiata-furba.vercel.app/api/privacy";
@@ -15,6 +16,13 @@ export default function SettingsScreen() {
   const { isPro, tier, status, isLoading: subLoading } = useSubscription();
   const [notif, setNotif] = useState(true);
   const [hapticsOn, setHapticsOn] = useState(true);
+  const [locale, setLocale] = useState(i18n.locale.substring(0, 2));
+
+  const toggleLanguage = () => {
+    const newLang = locale === "en" ? "it" : "en";
+    setLanguage(newLang);
+    setLocale(newLang);
+  };
 
   const handleResetOnboarding = () => {
     Alert.alert("Reset onboarding", "Mostra di nuovo l'onboarding al prossimo avvio?", [
@@ -104,6 +112,18 @@ export default function SettingsScreen() {
                 <Text className="text-xs text-muted">Feedback aptico</Text>
               </View>
               <Switch value={hapticsOn} onValueChange={setHapticsOn} />
+            </View>
+            <View className="p-4 flex-row items-center justify-between">
+              <View>
+                <Text className="font-semibold text-foreground">Lingua / Language</Text>
+                <Text className="text-xs text-muted">IT / EN</Text>
+              </View>
+              <Switch 
+                value={locale === "en"} 
+                onValueChange={toggleLanguage} 
+                trackColor={{ false: "#ccc", true: "#2D5A3D" }}
+                thumbColor={"#fff"}
+              />
             </View>
           </View>
 
