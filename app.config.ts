@@ -5,7 +5,7 @@ import type { ExpoConfig } from "expo/config";
 
 const bundleId = "com.passeggiatafurba.app";
 const env = {
-  appName: "Passeggiata Furba",
+  appName: "FurryWalk",
   appSlug: "passeggiata-furba",
   logoUrl: "https://d2xsxph8kpxj0f.cloudfront.net/310519663611683209/KDdoZNyUrVhVTvdxaK293E/splash-icon-nCKhaT5m5QUb942pk5rgS6.webp",
   scheme: "passeggiatafurba",
@@ -34,9 +34,8 @@ const config: ExpoConfig = {
   },
   android: {
     adaptiveIcon: {
-      backgroundColor: "#FFF5E6",
+      backgroundColor: "#FFFFFF",
       foregroundImage: "./assets/images/android-icon-foreground.png",
-      backgroundImage: "./assets/images/android-icon-background.png",
       monochromeImage: "./assets/images/android-icon-monochrome.png",
     },
     edgeToEdgeEnabled: true,
