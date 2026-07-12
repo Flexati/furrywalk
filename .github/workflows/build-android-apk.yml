@@ -185,7 +185,7 @@ jobs:
           cd android
           ./gradlew assembleDebug -PversionCode=${{ github.event.inputs.version_code || '6' }}
         env:
-          ORG_GRADLE_PROJECT_reactNativeArchitectures: "arm64-v8a"
+          ORG_GRADLE_PROJECT_reactNativeArchitectures: "arm64-v8a,armeabi-v7a,x86_64,x86"
       - name: Find APK
         id: find-apk
         run: |
