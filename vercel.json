@@ -3,9 +3,11 @@
   "installCommand": "pnpm install --frozen-lockfile",
   "buildCommand": "",
   "outputDirectory": ".",
-  "builds": [
-    { "src": "api/index.ts", "use": "@vercel/node" }
-  ],
+  "functions": {
+    "api/index.ts": {
+      "runtime": "@vercel/node@3.2.8"
+    }
+  },
   "rewrites": [
     { "source": "/privacy", "destination": "/privacy.html" },
     { "source": "/api/(.*)", "destination": "/api/index" }
