@@ -1,9 +1,8 @@
 // Phase 1.1 — Production config
-// Package ID: com.passeggiatafurba.app (Play Store standard format)
-// DO NOT use the manus.space timestamp ID in production — Play Store requires stable, human-readable package names.
+// Package ID: space.dogs.walk.dogs.t20260504051231 — Play Store-registered identifier
 import type { ExpoConfig } from "expo/config";
 
-const bundleId = "com.passeggiatafurba.app";
+const bundleId = "space.dogs.walk.dogs.t20260504051231";
 const env = {
   appName: "FurryWalk",
   appSlug: "passeggiata-furba",

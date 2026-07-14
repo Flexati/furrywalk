@@ -165,7 +165,7 @@ export async function validateWithGooglePlay(
     }
 
     const { access_token } = (await tokenRes.json()) as { access_token: string };
-    const packageName = "com.passeggiatafurba.app";
+    const packageName = "space.dogs.walk.dogs.t20260504051231";
 
     // Validate subscription purchase
     const validateRes = await fetch(
