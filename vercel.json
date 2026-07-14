@@ -1,6 +1,11 @@
 {
   "framework": null,
   "installCommand": "pnpm install --frozen-lockfile",
+  "buildCommand": "",
+  "outputDirectory": ".",
+  "builds": [
+    { "src": "api/index.ts", "use": "@vercel/node" }
+  ],
   "rewrites": [
     { "source": "/privacy", "destination": "/privacy.html" },
     { "source": "/api/(.*)", "destination": "/api/index" }
