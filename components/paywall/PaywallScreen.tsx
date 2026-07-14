@@ -43,8 +43,8 @@ const BENEFITS: { icon: string; title: string; desc: string }[] = [
   },
   {
     icon: "medkit",
-    title: "3 Vet Tele-Consults / Month",
-    desc: "Professional advice when you need it",
+    title: "Vet Health Library",
+    desc: "Expert-written answers on dog health & walking safety",
   },
   {
     icon: "download",

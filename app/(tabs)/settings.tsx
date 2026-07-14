@@ -2,6 +2,7 @@ import { ScrollView, Text, View, TouchableOpacity, Switch, Alert, Linking } from
 import { ScreenContainer } from "@/components/screen-container";
 import { useState } from "react";
 import { Storage } from "@/lib/services/storage";
+import { exportWalkHistory } from "@/utils/export-utils";
 import { useRouter } from "expo-router";
 import { useSubscription } from "@/hooks/use-subscription";
 import Constants from "expo-constants";
@@ -17,6 +18,7 @@ export default function SettingsScreen() {
   const [notif, setNotif] = useState(true);
   const [hapticsOn, setHapticsOn] = useState(true);
   const [locale, setLocale] = useState(i18n.locale.substring(0, 2));
+  const [exporting, setExporting] = useState<"csv" | "pdf" | null>(null);
 
   const toggleLanguage = () => {
     const newLang = locale === "en" ? "it" : "en";
@@ -50,6 +52,21 @@ export default function SettingsScreen() {
         },
       },
     ]);
+  };
+
+  const handleExport = async (format: "csv" | "pdf") => {
+    if (!isPro && status !== "on_trial") {
+      router.push("/paywall");
+      return;
+    }
+    try {
+      setExporting(format);
+      await exportWalkHistory({ format });
+    } catch (e) {
+      Alert.alert("Errore export", String(e));
+    } finally {
+      setExporting(null);
+    }
   };
 
   const premiumLabel = subLoading
@@ -141,6 +158,41 @@ export default function SettingsScreen() {
             >
               <Text className="font-semibold text-error">Cancella tutte le passeggiate</Text>
             </TouchableOpacity>
+            <View className="gap-3 mt-3">
+              <Text className="text-sm font-bold text-foreground">ESPORTA DATI</Text>
+              {isPro || status === "on_trial" ? (
+                <View className="flex-row gap-3">
+                  <TouchableOpacity
+                    disabled={exporting !== null}
+                    onPress={() => handleExport("csv")}
+                    className="flex-1 bg-primary rounded-2xl py-3 items-center active:opacity-90"
+                  >
+                    <Text className="text-white font-bold">
+                      {exporting === "csv" ? "..." : "Esporta CSV"}
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    disabled={exporting !== null}
+                    onPress={() => handleExport("pdf")}
+                    className="flex-1 bg-primary rounded-2xl py-3 items-center active:opacity-90"
+                  >
+                    <Text className="text-white font-bold">
+                      {exporting === "pdf" ? "..." : "Esporta PDF"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  onPress={() => router.push("/paywall")}
+                  className="bg-surface rounded-2xl p-4 border border-border"
+                >
+                  <Text className="text-primary font-semibold">🔓 Sblocca l'export dei dati</Text>
+                  <Text className="text-xs text-muted mt-1">
+                    Esporta le tue passeggiate in CSV o PDF per il veterinario.
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
           </View>
 
           <View className="gap-3">

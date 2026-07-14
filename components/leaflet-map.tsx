@@ -20,6 +20,8 @@ export interface LeafletMapProps {
   polyline?: MapPoint[];
   heatmap?: MapPoint[];
   followPolyline?: boolean;
+  offlineMode?: boolean;
+  cachedTilesUri?: Record<string, string>;
   style?: any;
 }
 
@@ -31,10 +33,13 @@ function buildHtml(props: LeafletMapProps): string {
   const markers = props.markers ?? [];
   const polyline = props.polyline ?? [];
   const heatmap = props.heatmap ?? [];
+  const offlineMode = props.offlineMode ?? false;
+  const cachedTilesUri = props.cachedTilesUri ?? {};
 
   const markersJs = JSON.stringify(markers);
   const polylineJs = JSON.stringify(polyline.map((p) => [p.latitude, p.longitude]));
   const heatmapJs = JSON.stringify(heatmap.map((p) => [p.latitude, p.longitude, 0.6]));
+  const cachedTilesJs = JSON.stringify(cachedTilesUri);
 
   return `<!DOCTYPE html>
 <html>
@@ -45,17 +50,85 @@ function buildHtml(props: LeafletMapProps): string {
 <style>
   html, body, #map { margin: 0; padding: 0; height: 100%; width: 100%; background: #e8eef1; }
   .pf-marker { font-size: 26px; line-height: 26px; text-align: center; }
+  .offline-indicator { 
+    position: absolute; 
+    bottom: 10px; 
+    right: 10px; 
+    background: #1E3D2F; 
+    color: white; 
+    padding: 6px 12px; 
+    border-radius: 16px; 
+    font-size: 12px; 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  }
 </style>
 </head>
 <body>
 <div id="map"></div>
+${offlineMode ? '<div class="offline-indicator">📴 Offline</div>' : ''}
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 <script>
   (function () {
     try {
       var map = L.map('map', { zoomControl: true, attributionControl: false }).setView([${center.latitude}, ${center.longitude}], ${zoom});
-      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
+      
+      var cachedTiles = ${cachedTilesJs};
+      var isOffline = ${offlineMode ? 'true' : 'false'};
+      
+      // Custom tile layer that checks cache first
+      var tileLayer = L.tileLayer('', {
+        maxZoom: 19,
+        tileSize: 256,
+        updateWhenIdle: true,
+        keepBuffer: 10
+      });
+      
+      // Override createTile to use cached tiles
+      tileLayer.createTile = function(tilePoint, done) {
+        var z = tilePoint.z;
+        var x = tilePoint.x;
+        var y = tilePoint.y;
+        var cacheKey = z + '_' + x + '_' + y;
+        
+        var tile = document.createElement('img');
+        tile.setAttribute('role', 'presentation');
+        
+        var src;
+        if (cachedTiles[cacheKey]) {
+          // Use cached tile
+          src = cachedTiles[cacheKey];
+        } else if (!isOffline) {
+          // Use network tile
+          src = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'.replace('{z}', z).replace('{x}', x).replace('{y}', y);
+        } else {
+          // Offline and not cached - show placeholder
+          tile.style.backgroundColor = '#d0d7dc';
+          done(null, tile);
+          return tile;
+        }
+        
+        tile.onload = function() { done(null, tile); };
+        tile.onerror = function() { 
+          if (!isOffline) {
+            // Fallback to OSM if cache miss and online
+            var fallbackSrc = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'.replace('{z}', z).replace('{x}', x).replace('{y}', y);
+            if (this.src !== fallbackSrc) {
+              this.src = fallbackSrc;
+              return;
+            }
+          }
+          // Show placeholder for missing offline tiles
+          this.style.backgroundColor = '#d0d7dc';
+          done(null, tile); 
+        };
+        tile.src = src;
+        return tile;
+      };
+      
+      tileLayer.addTo(map);
 
       var markers = ${markersJs};
       markers.forEach(function (m) {
@@ -91,6 +164,18 @@ function buildHtml(props: LeafletMapProps): string {
           }
           if (data.center) map.setView([data.center.latitude, data.center.longitude], data.zoom || map.getZoom());
         } catch (e) {}
+      };
+
+      // Expose map bounds for offline download
+      window.__pfGetBounds = function() {
+        var bounds = map.getBounds();
+        return JSON.stringify({
+          latitudeMin: bounds.getSouth(),
+          latitudeMax: bounds.getNorth(),
+          longitudeMin: bounds.getWest(),
+          longitudeMax: bounds.getEast(),
+          zoom: map.getZoom()
+        });
       };
 
       if (window.ReactNativeWebView) window.ReactNativeWebView.postMessage('ready');

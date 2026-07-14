@@ -34,9 +34,10 @@ export async function handlePlayBillingSync(req: Request, res: Response): Promis
   }
 
   // ─── Server-side validation (optional, requires service account) ───
+  let validation: PlayValidationResult | null = null;
   if (process.env.GOOGLE_PLAY_SERVICE_ACCOUNT) {
-    const validated = await validateWithGooglePlay(purchaseToken, productId);
-    if (!validated) {
+    validation = await validateWithGooglePlay(purchaseToken, productId);
+    if (!validation.valid) {
       res.status(400).json({ error: "Purchase validation failed with Google Play" });
       return;
     }
@@ -81,9 +82,13 @@ export async function handlePlayBillingSync(req: Request, res: Response): Promis
     lemonSqueezyVariantId: productId,
     lemonSqueezyProductId: "google-play",
     tier: resolvedTier,
-    status: "active" as const,
+    status: validation?.isTrial ? "on_trial" : "active",
+    trialStart: validation?.isTrial ? now : null,
+    trialEnd: validation?.trialEnd ? new Date(validation.trialEnd) : null,
     currentPeriodStart: now,
-    currentPeriodEnd: periodEnd,
+    // During a free trial, Play reports the trial expiry as expiryTimeMillis,
+    // which we persist as both the period end and the trial end.
+    currentPeriodEnd: validation?.trialEnd ? new Date(validation.trialEnd) : periodEnd,
   });
 
   // Update ad tier: pro users get no ads
@@ -105,14 +110,29 @@ export async function handlePlayBillingSync(req: Request, res: Response): Promis
 }
 
 /**
+ * Result of server-side Google Play purchase validation.
+ * - valid:    purchase is authentic and not expired. FAIL-CLOSED: false on any error.
+ * - isTrial:  purchase is currently inside a free-trial period (paymentState === 2).
+ * - trialEnd: ISO timestamp of trial expiry when in trial, otherwise null.
+ */
+export interface PlayValidationResult {
+  valid: boolean;
+  isTrial: boolean;
+  trialEnd: string | null;
+}
+
+/**
  * Validate a purchase token with Google Play Developer API.
  * Requires GOOGLE_PLAY_SERVICE_ACCOUNT env var (service account JSON).
- * Returns true if the purchase is valid and not expired.
+ * Returns { valid, isTrial, trialEnd } derived from the Play subscription state.
+ * FAILS CLOSED: any error, or a missing service account in production, yields valid:false.
  */
-async function validateWithGooglePlay(
+export async function validateWithGooglePlay(
   purchaseToken: string,
   productId: string,
-): Promise<boolean> {
+): Promise<PlayValidationResult> {
+  const failClosed: PlayValidationResult = { valid: false, isTrial: false, trialEnd: null };
+
   try {
     const serviceAccount = JSON.parse(
       process.env.GOOGLE_PLAY_SERVICE_ACCOUNT ?? "{}",
@@ -122,10 +142,11 @@ async function validateWithGooglePlay(
       console.warn("[PlayBilling] GOOGLE_PLAY_SERVICE_ACCOUNT not configured — cannot validate purchase");
       if (process.env.NODE_ENV === "production") {
         console.error("[PlayBilling] CRITICAL: Service account missing in production — rejecting purchase");
-        return false;
+        return failClosed;
       }
       console.warn("[PlayBilling] Non-production environment — allowing purchase without server-side validation");
-      return true;
+      // Dev/test fallback: without the API we cannot detect a trial, so default to active.
+      return { valid: true, isTrial: false, trialEnd: null };
     }
 
     // Get OAuth2 token
@@ -140,11 +161,11 @@ async function validateWithGooglePlay(
 
     if (!tokenRes.ok) {
       console.error("[PlayBilling] Failed to get OAuth token:", tokenRes.status);
-      return false;
+      return failClosed;
     }
 
     const { access_token } = (await tokenRes.json()) as { access_token: string };
-    const packageName = "space.manus.passeggiata.furba.t20260504051231";
+    const packageName = "com.passeggiatafurba.app";
 
     // Validate subscription purchase
     const validateRes = await fetch(
@@ -156,15 +177,26 @@ async function validateWithGooglePlay(
 
     if (!validateRes.ok) {
       console.error("[PlayBilling] Google validation failed:", await validateRes.text());
-      return false;
+      return failClosed;
     }
 
-    const data = (await validateRes.json()) as { paymentState?: number };
+    const data = (await validateRes.json()) as {
+      paymentState?: number;
+      expiryTimeMillis?: string | number;
+    };
     // paymentState: 0=pending, 1=received, 2=free trial, 3=deferred
-    return data.paymentState === 1 || data.paymentState === 2;
+    const isTrial = data.paymentState === 2;
+    const valid = data.paymentState === 1 || data.paymentState === 2;
+    // During a free trial, expiryTimeMillis is the end of the trial period.
+    const trialEnd =
+      isTrial && data.expiryTimeMillis
+        ? new Date(Number(data.expiryTimeMillis)).toISOString()
+        : null;
+
+    return { valid, isTrial, trialEnd };
   } catch (error) {
     console.error("[PlayBilling] Validation error:", error);
-    return false; // FAIL CLOSED: reject purchase if validation cannot complete
+    return failClosed; // FAIL CLOSED: reject purchase if validation cannot complete
   }
 }
 

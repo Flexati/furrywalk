@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const KEYS = {
   ONBOARDING_DONE: "pf:onboarding_done",
   DOG_PROFILE: "pf:dog_profile",
+  DOG_PROFILES: "pf:dog_profiles",
   WALKS: "pf:walks",
   REMINDERS: "pf:reminders",
   PREMIUM: "pf:premium",
@@ -65,10 +66,47 @@ export const Storage = {
   },
 
   async getDogProfile(): Promise<DogProfile | null> {
+    // Backwards compatibility: check for legacy single profile first
+    // If new multi-profile storage exists, return the first profile
+    const profiles = await read<DogProfile[]>(KEYS.DOG_PROFILES, []);
+    if (profiles.length > 0) {
+      return profiles[0];
+    }
+    // Fallback to legacy single profile storage
     return read<DogProfile | null>(KEYS.DOG_PROFILE, null);
   },
   async setDogProfile(p: DogProfile) {
+    // Backwards compatibility: write to both legacy and new storage
     await write(KEYS.DOG_PROFILE, p);
+    // If no profiles exist, use this as the first profile
+    const profiles = await read<DogProfile[]>(KEYS.DOG_PROFILES, []);
+    if (profiles.length === 0) {
+      await write(KEYS.DOG_PROFILES, [p]);
+    }
+  },
+
+  // Multiple dog profiles support (for premium gate)
+  async getDogProfiles(): Promise<DogProfile[]> {
+    const profiles = await read<DogProfile[]>(KEYS.DOG_PROFILES, []);
+    // Backwards compatibility: if legacy single profile exists, migrate it
+    if (profiles.length === 0) {
+      const legacy = await read<DogProfile | null>(KEYS.DOG_PROFILE, null);
+      if (legacy) {
+        await write(KEYS.DOG_PROFILES, [legacy]);
+        await AsyncStorage.removeItem(KEYS.DOG_PROFILE);
+        return [legacy];
+      }
+    }
+    return profiles;
+  },
+  async setDogProfiles(profiles: DogProfile[]) {
+    await write(KEYS.DOG_PROFILES, profiles);
+  },
+  async addDogProfile(profile: DogProfile) {
+    const profiles = await Storage.getDogProfiles();
+    profiles.push(profile);
+    await Storage.setDogProfiles(profiles);
+    return profiles;
   },
 
   async getWalks(): Promise<WalkRecord[]> {

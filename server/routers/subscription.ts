@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, inArray } from "drizzle-orm";
 import { z } from "zod";
 import {
   subscriptions,
@@ -7,6 +7,7 @@ import {
 } from "../../drizzle/schema";
 import { getDb } from "../db";
 import { protectedProcedure, publicProcedure, router } from "../_core/trpc";
+import { validateWithGooglePlay } from "../_core/play-billing";
 
 export const subscriptionRouter = router({
   /** Get current subscription status for the authenticated user. */
@@ -28,7 +29,8 @@ export const subscriptionRouter = router({
       .where(
         and(
           eq(subscriptions.userId, ctx.user.id),
-          eq(subscriptions.status, "active"),
+          // Both an active subscription AND one inside its free trial are premium.
+          inArray(subscriptions.status, ["active", "on_trial"]),
         ),
       )
       .orderBy(desc(subscriptions.createdAt))
@@ -117,6 +119,26 @@ export const subscriptionRouter = router({
       if (mapping.interval === "monthly") periodEnd.setMonth(periodEnd.getMonth() + 1);
       else periodEnd.setFullYear(periodEnd.getFullYear() + 1);
 
+      // ─── Server-side trial/validity detection (no client spoofing) ───
+      // Reuse the exact same verification the Express /api/play-billing/sync route uses.
+      // When GOOGLE_PLAY_SERVICE_ACCOUNT is configured we ask Google Play whether the
+      // purchase is in a trial period; otherwise we fall back to "active" (dev/test only).
+      let status: "active" | "on_trial" = "active";
+      let trialEnd: Date | null = null;
+      if (process.env.GOOGLE_PLAY_SERVICE_ACCOUNT) {
+        const verification = await validateWithGooglePlay(input.purchaseToken, input.productId);
+        if (!verification.valid) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Purchase validation failed with Google Play",
+          });
+        }
+        if (verification.isTrial) {
+          status = "on_trial";
+          trialEnd = verification.trialEnd ? new Date(verification.trialEnd) : null;
+        }
+      }
+
       // Check for duplicate purchase token
       const [existing] = await db
         .select({ id: subscriptions.id })
@@ -135,9 +157,12 @@ export const subscriptionRouter = router({
         lemonSqueezyVariantId: input.productId, // stores Play Store product ID
         lemonSqueezyProductId: "google-play",
         tier: mapping.tier,
-        status: "active" as const,
+        status,
+        trialStart: status === "on_trial" ? now : null,
+        trialEnd,
         currentPeriodStart: now,
-        currentPeriodEnd: periodEnd,
+        // During a free trial the Play trial expiry is the effective period end.
+        currentPeriodEnd: trialEnd ?? periodEnd,
       });
 
       // Update ad tier: pro users get no ads

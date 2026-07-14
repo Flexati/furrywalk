@@ -3,6 +3,11 @@ import { ScreenContainer } from "@/components/screen-container";
 import { useEffect, useState, useCallback } from "react";
 import { Storage, type Reminder, type WalkRecord } from "@/lib/services/storage";
 import { notificationService } from "@/lib/services/notification-service";
+import { VetFAQList } from "@/components/VetFAQList";
+import { WeeklyChart } from "@/components/stats/weekly-chart";
+import { getWeeklyStats, type WeeklyStat } from "@/lib/services/analytics-weekly";
+import { usePremium } from "@/hooks/usePremium";
+import { router } from "expo-router";
 
 const REMINDER_TYPES: { type: Reminder["type"]; emoji: string; label: string; days: number }[] = [
   { type: "vaccino", emoji: "💉", label: "Vaccino annuale", days: 365 },
@@ -20,11 +25,19 @@ function startOfWeek(d: Date) {
 export default function HealthScreen() {
   const [walks, setWalks] = useState<WalkRecord[]>([]);
   const [reminders, setReminders] = useState<Reminder[]>([]);
+  const [weeklyStats, setWeeklyStats] = useState<WeeklyStat[]>([]);
+  const [statsMode, setStatsMode] = useState<"distance" | "duration">("distance");
+  const { isPremium } = usePremium();
 
   const refresh = useCallback(async () => {
-    const [w, r] = await Promise.all([Storage.getWalks(), Storage.getReminders()]);
+    const [w, r, stats] = await Promise.all([
+      Storage.getWalks(),
+      Storage.getReminders(),
+      getWeeklyStats(8),
+    ]);
     setWalks(w);
     setReminders(r);
+    setWeeklyStats(stats);
   }, []);
 
   useEffect(() => {
@@ -167,6 +180,56 @@ export default function HealthScreen() {
                 </TouchableOpacity>
               ))}
             </View>
+          </View>
+
+          {/* Advanced Statistics - Premium Gated */}
+          <View className="gap-3">
+            <Text className="text-sm font-bold text-foreground">STATISTICHE AVANZATE</Text>
+            {isPremium ? (
+              <View className="bg-surface rounded-2xl p-4 border border-border gap-3">
+                <View className="flex-row gap-2">
+                  <TouchableOpacity
+                    onPress={() => setStatsMode("distance")}
+                    className={`flex-1 rounded-full py-2 items-center border ${
+                      statsMode === "distance" ? "bg-primary border-primary" : "bg-surface border-border"
+                    }`}
+                  >
+                    <Text className={statsMode === "distance" ? "text-white font-semibold" : "text-foreground"}>
+                      Distanza
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => setStatsMode("duration")}
+                    className={`flex-1 rounded-full py-2 items-center border ${
+                      statsMode === "duration" ? "bg-primary border-primary" : "bg-surface border-border"
+                    }`}
+                  >
+                    <Text className={statsMode === "duration" ? "text-white font-semibold" : "text-foreground"}>
+                      Durata
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+                <WeeklyChart weeklyStats={weeklyStats} mode={statsMode} />
+              </View>
+            ) : (
+              <TouchableOpacity
+                onPress={() => router.push("/paywall")}
+                className="bg-surface rounded-2xl p-4 border border-border"
+              >
+                <Text className="text-primary font-semibold">🔓 Sblocca le statistiche avanzate</Text>
+                <Text className="text-xs text-muted mt-1">
+                  Grafico settimanale, medie e tendenze delle tue passeggiate.
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Vet Health FAQ Library - Premium Gated */}
+          <View className="gap-3">
+            <Text className="text-sm font-bold text-foreground">CONSIGLI DEL VETERINARIO</Text>
+            <VetFAQList
+              onOpenPaywall={() => router.push("/paywall")}
+            />
           </View>
         </View>
       </ScrollView>

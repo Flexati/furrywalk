@@ -19,13 +19,14 @@ export default function OnboardingScreen() {
   const finishOnboarding = async () => {
     setBusy(true);
     try {
-      await Storage.setDogProfile({
+      // Create first dog profile using new multi-profile storage
+      await Storage.setDogProfiles([{
         name: dogName.trim() || "Il mio cane",
         breed: dogBreed.trim() || "Meticcio",
         age: dogAge.trim() || "—",
         energy: dogEnergy,
         avatarEmoji: "🐶",
-      });
+      }]);
       await Storage.setOnboardingDone(true);
       router.replace("/(tabs)");
     } finally {
