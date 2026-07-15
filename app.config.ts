@@ -40,9 +40,9 @@ const config: ExpoConfig = {
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
     package: env.androidPackage,
-    // Phase 1.1: Play Store versionCode 1 for initial release
+    // Phase 1.1: Play Store versionCode 2 (vc1 already used on Play Console)
     // Auto-incremented by EAS Build (eas.json autoIncrement: true) on each production build
-    versionCode: 1,
+    versionCode: 2,
     permissions: [
       "POST_NOTIFICATIONS",
       "ACCESS_FINE_LOCATION",
