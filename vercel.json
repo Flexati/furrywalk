@@ -9,7 +9,7 @@
     }
   },
   "rewrites": [
-    { "source": "/privacy", "destination": "/api/privacy" },
+    { "source": "/privacy", "destination": "/api/index" },
     { "source": "/api/(.*)", "destination": "/api/index" }
   ]
 }

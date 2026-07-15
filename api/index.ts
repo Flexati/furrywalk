@@ -11,7 +11,9 @@ const app = createApp();
 
 // ─── Privacy Policy (PUBLIC — required by Google Play Store) ───
 // Defined here (not just in server/_core) to guarantee it's in the lambda bundle.
-app.get("/api/privacy", (_req, res) => {
+// Both /privacy and /api/privacy — Vercel rewrites /privacy -> /api/index,
+// and /api/privacy is also rewritten to /api/index by the catch-all rule.
+const servePrivacy = (_req: any, res: any) => {
   res.setHeader("Content-Type", "text/html; charset=utf-8");
   res.setHeader("Cache-Control", "public, max-age=86400");
   res.send(`<!DOCTYPE html>
@@ -74,6 +76,9 @@ app.get("/api/privacy", (_req, res) => {
   </div>
 </body>
 </html>`);
-});
+};
+
+app.get("/privacy", servePrivacy);
+app.get("/api/privacy", servePrivacy);
 
 export default app;
