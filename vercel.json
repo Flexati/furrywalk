@@ -1,7 +1,7 @@
 {
   "framework": null,
   "installCommand": "pnpm install --frozen-lockfile --force",
-  "buildCommand": "echo 'build forced at' $(date) && ls server/_core/index.ts api/entry.ts",
+  "buildCommand": "echo 'build at' $(date)",
   "outputDirectory": ".",
   "functions": {
     "api/entry.ts": {

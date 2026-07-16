@@ -1,22 +1,34 @@
-/**
- * Vercel serverless entry point.
- *
- * Vercel auto-detects an Express app exported as default and wraps it
- * as a serverless function. All /api/* routes are handled by this function.
- */
-import "dotenv/config"; // no-op in production, loads .env in local dev
+import "dotenv/config";
+import path from "node:path";
+import fs from "node:fs";
 import { createApp } from "../server/_core/index";
 
 const app = createApp();
 
-// ─── Privacy Policy (PUBLIC — required by Google Play Store) ───
-// Defined here (not just in server/_core) to guarantee it's in the lambda bundle.
-// Both /privacy and /api/privacy — Vercel rewrites /privacy -> /api/index,
-// and /api/privacy is also rewritten to /api/index by the catch-all rule.
-const servePrivacy = (_req: any, res: any) => {
-  res.setHeader("Content-Type", "text/html; charset=utf-8");
-  res.setHeader("Cache-Control", "public, max-age=86400");
-  res.send(`<!DOCTYPE html>
+// ─── Static privacy + terms pages (PUBLIC — required by Google Play Store) ───
+// Read the HTML files at module-eval time, fall back to embedded full HTML if missing.
+// This avoids relying on Vercel static serving (public/ excluded by .vercelignore,
+// outputDirectory:"." only ships root files when framework is not 'nextjs').
+function readStaticFile(name: string): string {
+  const candidates = [
+    process.cwd() + "/" + name,
+    path.resolve(process.cwd(), "..", name),
+    path.resolve(__dirname, "..", name),
+    "/var/task/" + name,
+    "/var/" + name,
+  ];
+  for (const p of candidates) {
+    try {
+      if (fs.existsSync(p)) return fs.readFileSync(p, "utf8");
+    } catch {}
+  }
+  return "";
+}
+
+const PRIVACY_HTML = readStaticFile("privacy.html");
+const TERMS_HTML = readStaticFile("terms.html");
+
+const PRIVACY_FALLBACK = `<!DOCTYPE html>
 <html lang="it">
 <head>
   <meta charset="UTF-8"/>
@@ -24,66 +36,118 @@ const servePrivacy = (_req: any, res: any) => {
   <title>Privacy Policy — Passeggiata Furba</title>
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
-         background:#FFF5E6;color:#2B2B2B;padding:32px 24px;max-width:720px;margin:0 auto;line-height:1.7}
-    h1{color:#1E3D2F;font-size:2rem;margin-bottom:8px}
-    h2{color:#1E3D2F;font-size:1.3rem;margin-top:24px;margin-bottom:8px}
-    p{margin-bottom:12px}
-    ul{margin-left:20px;margin-bottom:12px}
-    li{margin-bottom:4px}
-    a{color:#1E3D2F;text-decoration:underline}
-    .updated{color:#666;font-size:0.9rem;margin-bottom:24px}
-    .contact{background:#E8F5E9;padding:16px;border-radius:8px;margin-top:24px}
+    body{font-family:sans-serif;background:#FFF5E6;color:#2B2B2B;padding:2rem;max-width:800px;margin:2rem auto;line-height:1.7}
+    h1{color:#1E3D2F;font-size:1.8rem;margin-bottom:0.5rem}
+    h2{color:#1E3D2F;font-size:1.2rem;margin-top:1.4rem;margin-bottom:0.5rem}
+    p,li{margin-bottom:0.6rem}
+    a{color:#1E3D2F}
   </style>
 </head>
 <body>
   <h1>Privacy Policy — Passeggiata Furba</h1>
-  <p class="updated">Ultimo aggiornamento: 14 Luglio 2026</p>
+  <p><em>Contenuto embed fallback — file privacy.html non incluso nel bundle.</em></p>
   <h2>1. Titolare del trattamento</h2>
-  <p>Hamza Jaoual<br/>Email: <a href="mailto:amzajaguar@gmail.com">amzajaguar@gmail.com</a></p>
-  <h2>2. Dati che raccogliamo</h2>
-  <h3>2.1 Dati account</h3>
-  <ul><li>Identificatori OAuth (Google/Apple sign-in) per l'autenticazione</li><li>Indirizzo email associato al provider di accesso</li></ul>
-  <h3>2.2 Profilo del cane</h3>
-  <ul><li>Nome, razza, età, peso, foto (opzionale)</li><li>Record sanitari: date vaccinazioni, trattamenti antiparassitari, contatti veterinario</li></ul>
-  <h3>2.3 Dati delle passeggiate</h3>
-  <ul><li>Tracce GPS durante le passeggiate attive</li><li>Durata, distanza, geometria del percorso</li><li>Foto scattate durante le passeggiate</li></ul>
-  <h3>2.4 Dati di utilizzo</h3>
-  <ul><li>Analytics anonime sulle interazioni con l'app</li><li>Crash report (via Expo)</li></ul>
-  <h3>2.5 Dati di pagamento</h3>
-  <ul><li>Livello e stato dell'abbonamento (Free / Pro / Pro Family)</li><li>Token di acquisto e ID ordine (Google Play Billing)</li><li><strong>NON memorizziamo i dati completi della carta di credito.</strong> I pagamenti sono processati da Google Play.</li></ul>
-  <h2>3. Come usiamo i tuoi dati</h2>
-  <ul><li><strong>Tracciamento passeggiate:</strong> i dati GPS sono usati esclusivamente per registrare il percorso e calcolare la distanza. Il GPS è attivo solo durante una passeggiata avviata dall'utente.</li><li><strong>Salute del cane:</strong> sistema di promemoria per vaccinazioni e trattamenti antiparassitari.</li><li><strong>Abbonamento:</strong> per gestire il tuo abbonamento Pro e l'esperienza senza pubblicità.</li><li><strong>Miglioramento:</strong> analytics anonime ci aiutano a migliorare l'app.</li></ul>
-  <h2>4. Condivisione dei dati</h2>
-  <p>Non vendiamo i tuoi dati a terzi. I dati sono condivisi solo con:</p>
-  <ul><li><strong>Supabase</strong> — Database hosting (tutti i dati app)</li><li><strong>Google Play Billing</strong> — Pagamenti (token di acquisto)</li><li><strong>Vercel</strong> — Hosting API (dati cifrati in transito)</li></ul>
-  <h2>5. Conservazione dei dati</h2>
-  <ul><li><strong>Dati passeggiate:</strong> conservati fino alla cancellazione o eliminazione dell'account.</li><li><strong>Tracce GPS:</strong> archiviate per lo storico personale. Puoi eliminare singole passeggiate in qualsiasi momento.</li><li><strong>Account:</strong> eliminato su richiesta (email amzajaguar@gmail.com).</li></ul>
-  <h2>6. I tuoi diritti (GDPR)</h2>
-  <p>Sotto il Regolamento UE 2016/679 (GDPR), hai diritto a:</p>
-  <ul><li><strong>Accesso:</strong> richiedere una copia dei tuoi dati</li><li><strong>Rettifica:</strong> correggere dati inesatti</li><li><strong>Cancellazione:</strong> eliminare l'account e tutti i dati associati</li><li><strong>Portabilità:</strong> ricevere i tuoi dati in formato leggibile</li><li><strong>Opposizione:</strong> opporti al trattamento dei tuoi dati</li></ul>
-  <p>Per esercitare questi diritti: <a href="mailto:amzajaguar@gmail.com">amzajaguar@gmail.com</a></p>
-  <h2>7. Dati di posizione (specifica)</h2>
-  <p>Passeggiata Furba usa il GPS in foreground <strong>solo durante le passeggiate attive</strong> che avvii esplicitamente. I dati di posizione:</p>
-  <ul><li>Non sono mai raccolti in background</li><li>Sono usati solo per mostrare il percorso sulla mappa e calcolare la distanza</li><li>Possono essere eliminati rimuovendo la passeggiata dallo storico</li><li>Non sono condivisi con terze parti per pubblicità o analytics</li></ul>
-  <h2>8. Privacy dei minori</h2>
-  <p>Passeggiata Furba non è rivolto a minori di 13 anni. Non raccogliamo consapevolmente dati da minori di 13 anni.</p>
-  <h2>9. Modifiche a questa policy</h2>
-  <p>Ti notificheremo eventuali modifiche pubblicando la nuova Privacy Policy su questa pagina e aggiornando la data "Ultimo aggiornamento".</p>
-  <div class="contact">
-    <h2>10. Contatti</h2>
-    <p>Email: <a href="mailto:amzajaguar@gmail.com">amzajaguar@gmail.com</a></p>
-  </div>
+  <p>Hamza Jaoual — <a href="mailto:amzajaguar@gmail.com">amzajaguar@gmail.com</a></p>
+  <h2>2. Dati raccolti</h2>
+  <ul>
+    <li><strong>Account:</strong> email e OAuth provider (Google/Apple).</li>
+    <li><strong>Profilo cane:</strong> nome, razza, età, peso, foto (opzionale).</li>
+    <li><strong>Passeggiate:</strong> tracce GPS in foreground, durata, distanza, foto allegate.</li>
+    <li><strong>Salute:</strong> record vaccinali e antiparassitari inseriti dall'utente.</li>
+    <li><strong>Abbonamento:</strong> tier (Free/Pro/Family) e token di acquisto Play Billing.</li>
+    <li><strong>Diagnostica:</strong> crash log anonimi via Expo.</li>
+  </ul>
+  <h2>3. Finalità</h2>
+  <ul>
+    <li>Registrare e visualizzare i percorsi delle passeggiate.</li>
+    <li>Calcolare statistiche di attività del cane.</li>
+    <li>Inviare promemoria per vaccinazioni e antiparassitari.</li>
+    <li>Gestire l'abbonamento Pro.</li>
+    <li>Migliorare l'app tramite analisi anonime.</li>
+  </ul>
+  <h2>4. Condivisione dati</h2>
+  <ul>
+    <li>Supabase — DB e storage.</li>
+    <li>Google Play Billing — pagamenti.</li>
+    <li>Vercel — hosting API (dati cifrati in transito).</li>
+  </ul>
+  <h2>5. La tua posizione GPS</h2>
+  <p>Solo in foreground durante passeggiate attive. Mai in background. Mai condivisa per advertising.</p>
+  <h2>6. Conservazione</h2>
+  <p>I dati sono conservati fino a cancellazione account. Le singole passeggiate possono essere eliminate dalla timeline.</p>
+  <h2>7. Diritti GDPR</h2>
+  <p>Accesso, rettifica, cancellazione, portabilità, opposizione. Per esercitarli: <a href="mailto:amzajaguar@gmail.com">amzajaguar@gmail.com</a></p>
+  <h2>8. Minori</h2>
+  <p>Non rivolto a minori di 13 anni. Nessun dato raccolto consapevolmente da essi.</p>
+  <h2>9. Contatti</h2>
+  <p><a href="mailto:amzajaguar@gmail.com">amzajaguar@gmail.com</a></p>
 </body>
-</html>`);
-};
+</html>`;
 
-app.get("/privacy", servePrivacy);
-app.get("/api/privacy", servePrivacy);
+const TERMS_FALLBACK = `<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Termini di Servizio — Passeggiata Furba</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:sans-serif;background:#FFF5E6;color:#2B2B2B;padding:2rem;max-width:800px;margin:2rem auto;line-height:1.7}
+    h1{color:#1E3D2F;font-size:1.8rem;margin-bottom:0.5rem}
+    h2{color:#1E3D2F;font-size:1.2rem;margin-top:1.4rem;margin-bottom:0.5rem}
+    p,li{margin-bottom:0.6rem}
+    a{color:#1E3D2F}
+  </style>
+</head>
+<body>
+  <h1>Termini di Servizio — Passeggiata Furba</h1>
+  <p><em>Smart Walk Dog</em></p>
+  <h2>1. Servizio</h2>
+  <p>Tracking passeggiate cani, abbonamento premium.</p>
+  <h2>2. Pagamenti</h2>
+  <p>Gestiti da Google Play. Cancellabili in qualsiasi momento.</p>
+  <h2>3. Contatto</h2>
+  <p><a href="mailto:amzajaguar@gmail.com">amzajaguar@gmail.com</a></p>
+  <h2>4. Legge applicabile</h2>
+  <p>Italia.</p>
+</body>
+</html>`;
 
-// DEBUG: verify lambda is running latest code
-app.get("/api/ping", (_req, res) => {
-  res.json({ ping: "pong", sha: "371bc65", at: Date.now() });
+function servePage(res: any, content: string, fallback: string, title: string, source: "file" | "fallback") {
+  const body = content && content.length > 200 ? content : fallback;
+  res.setHeader("Content-Type", "text/html; charset=utf-8");
+  res.setHeader("Cache-Control", "public, max-age=86400");
+  res.setHeader("X-Page-Source", source);
+  res.setHeader("X-Page-Title", title);
+  res.send(body);
+}
+
+app.get("/privacy", (_req, res) => {
+  servePage(res, PRIVACY_HTML, PRIVACY_FALLBACK, "privacy", PRIVACY_HTML ? "file" : "fallback");
+});
+app.get("/api/privacy", (_req, res) => {
+  servePage(res, PRIVACY_HTML, PRIVACY_FALLBACK, "privacy", PRIVACY_HTML ? "file" : "fallback");
+});
+
+app.get("/terms", (_req, res) => {
+  servePage(res, TERMS_HTML, TERMS_FALLBACK, "terms", TERMS_HTML ? "file" : "fallback");
+});
+app.get("/api/terms", (_req, res) => {
+  servePage(res, TERMS_HTML, TERMS_FALLBACK, "terms", TERMS_HTML ? "file" : "fallback");
+});
+
+// DEBUG: verify which bundle is running
+app.get("/api/__build_info", (_req, res) => {
+  res.json({
+    nodeVersion: process.version,
+    cwd: process.cwd(),
+    dirname: __dirname,
+    privacyLoaded: !!PRIVACY_HTML,
+    termsLoaded: !!TERMS_HTML,
+    privacySize: PRIVACY_HTML.length,
+    termsSize: TERMS_HTML.length,
+    buildTimestamp: new Date().toISOString(),
+  });
 });
 
 export default app;
