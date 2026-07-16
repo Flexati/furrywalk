@@ -4,11 +4,11 @@
   "buildCommand": "",
   "outputDirectory": ".",
   "functions": {
-    "api/index.ts": {
+    "api/entry.ts": {
       "runtime": "@vercel/node@3.2.8"
     }
   },
   "rewrites": [
-    { "source": "/(.*)", "destination": "/api/index" }
+    { "source": "/(.*)", "destination": "/api/entry" }
   ]
 }
