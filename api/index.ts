@@ -81,4 +81,9 @@ const servePrivacy = (_req: any, res: any) => {
 app.get("/privacy", servePrivacy);
 app.get("/api/privacy", servePrivacy);
 
+// DEBUG: verify lambda is running latest code
+app.get("/api/ping", (_req, res) => {
+  res.json({ ping: "pong", sha: "371bc65", at: Date.now() });
+});
+
 export default app;
