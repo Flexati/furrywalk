@@ -55,8 +55,24 @@ const config: ExpoConfig = {
       "WRITE_EXTERNAL_STORAGE",
       "VIBRATE",
       "INTERNET",
+      // expo-audio plugin requires RECORD_AUDIO
+      "RECORD_AUDIO",
+      "FOREGROUND_SERVICE",
+      "FOREGROUND_SERVICE_MEDIA_PLAYBACK",
       // Phase 1.1: BILLING permission for future Google Play Billing (Phase 1.4)
       "com.android.vending.BILLING",
+    ],
+    // Block permissions injected by transitive deps that triggered the
+    // Play Console "organization account required" rejection (USE_BIOMETRIC
+    // is treated by Google as a sensitive/biometric category). We don't use
+    // fingerprint/face unlock anywhere in the app.
+    blockedPermissions: [
+      "android.permission.USE_BIOMETRIC",
+      "android.permission.USE_FINGERPRINT",
+      "android.permission.SYSTEM_ALERT_WINDOW",
+      "android.permission.DUMP",
+      "android.permission.READ_APP_BADGE",
+      "android.permission.RECEIVE_BOOT_COMPLETED",
     ],
     intentFilters: [
       {
