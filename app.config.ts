@@ -40,9 +40,9 @@ const config: ExpoConfig = {
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
     package: env.androidPackage,
-    // Phase 1.1: Play Store versionCode 2 (vc1 already used on Play Console)
-    // Auto-incremented by EAS Build (eas.json autoIncrement: true) on each production build
-    versionCode: 2,
+    // Incrementato manualmente per ogni release Play Console.
+    // CI workflow --version-code NON sovrascrive app.config.ts → hardcoded.
+    versionCode: 10,
     // Note: REMOVED RECORD_AUDIO, FOREGROUND_SERVICE_MEDIA_PLAYBACK, BILLING
     // (last 3 entries previously here) — Play Console started requesting a
     // video demo for FOREGROUND_SERVICE_MEDIA_PLAYBACK because the app does
