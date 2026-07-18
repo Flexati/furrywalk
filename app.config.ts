@@ -43,36 +43,33 @@ const config: ExpoConfig = {
     // Phase 1.1: Play Store versionCode 2 (vc1 already used on Play Console)
     // Auto-incremented by EAS Build (eas.json autoIncrement: true) on each production build
     versionCode: 2,
+    // Note: REMOVED RECORD_AUDIO, FOREGROUND_SERVICE_MEDIA_PLAYBACK, BILLING
+    // (last 3 entries previously here) — Play Console started requesting a
+    // video demo for FOREGROUND_SERVICE_MEDIA_PLAYBACK because the app does
+    // not actually play background media. Permissions kept minimal to what
+    // the app truly uses: notifications + GPS (foreground tracking only,
+    // not background, so we also do NOT need FOREGROUND_SERVICE).
     permissions: [
       "POST_NOTIFICATIONS",
       "ACCESS_FINE_LOCATION",
       "ACCESS_COARSE_LOCATION",
-      // Phase 1.1 compliance: CAMERA + READ_MEDIA_IMAGES for walk photo feature
       "CAMERA",
       "READ_MEDIA_IMAGES",
-      // READ/WRITE_EXTERNAL_STORAGE kept for Android < 10 compat (minSdk 24)
       "READ_EXTERNAL_STORAGE",
       "WRITE_EXTERNAL_STORAGE",
       "VIBRATE",
       "INTERNET",
-      // expo-audio plugin requires RECORD_AUDIO
-      "RECORD_AUDIO",
-      "FOREGROUND_SERVICE",
-      "FOREGROUND_SERVICE_MEDIA_PLAYBACK",
-      // Phase 1.1: BILLING permission for future Google Play Billing (Phase 1.4)
-      "com.android.vending.BILLING",
     ],
-    // Block permissions injected by transitive deps that triggered the
-    // Play Console "organization account required" rejection (USE_BIOMETRIC
-    // is treated by Google as a sensitive/biometric category). We don't use
-    // fingerprint/face unlock anywhere in the app.
     blockedPermissions: [
       "android.permission.USE_BIOMETRIC",
       "android.permission.USE_FINGERPRINT",
+      "android.permission.RECORD_AUDIO",
+      "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK",
       "android.permission.SYSTEM_ALERT_WINDOW",
       "android.permission.DUMP",
       "android.permission.READ_APP_BADGE",
       "android.permission.RECEIVE_BOOT_COMPLETED",
+      "com.android.vending.BILLING",
     ],
     intentFilters: [
       {
@@ -95,19 +92,9 @@ const config: ExpoConfig = {
   },
   plugins: [
     "expo-router",
-    [
-      "expo-audio",
-      {
-        microphonePermission: "Allow $(PRODUCT_NAME) to access your microphone.",
-      },
-    ],
-    [
-      "expo-video",
-      {
-        supportsBackgroundPlayback: true,
-        supportsPictureInPicture: true,
-      },
-    ],
+    // REMOVED expo-audio and expo-video plugins: the app does not record audio
+    // or play background video, so including them caused Play Console to demand
+    // a video demo for FOREGROUND_SERVICE_MEDIA_PLAYBACK.
     [
       "expo-splash-screen",
       {
