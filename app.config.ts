@@ -1,8 +1,7 @@
-// Phase 1.1 — Production config
-// Package ID: space.dogs.walk.dogs.t20260504051231 — Play Store-registered identifier
+// Package ID: furry.walk.dog — Play Store-registered identifier
 import type { ExpoConfig } from "expo/config";
 
-const bundleId = "space.dogs.walk.dogs.t20260504051231";
+const bundleId = "furry.walk.dog";
 const env = {
   appName: "FurryWalk",
   appSlug: "passeggiata-furba",
