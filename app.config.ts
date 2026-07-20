@@ -41,7 +41,7 @@ const config: ExpoConfig = {
     package: env.androidPackage,
     // Incrementato manualmente per ogni release Play Console.
     // CI workflow --version-code NON sovrascrive app.config.ts → hardcoded.
-    versionCode: 10,
+    versionCode: 11,
     // Note: REMOVED RECORD_AUDIO, FOREGROUND_SERVICE_MEDIA_PLAYBACK, BILLING
     // (last 3 entries previously here) — Play Console started requesting a
     // video demo for FOREGROUND_SERVICE_MEDIA_PLAYBACK because the app does

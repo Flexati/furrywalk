@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Eliminazione account · Passeggiata Furba</title>
+<meta name="description" content="Richiedi la cancellazione del tuo account e dei tuoi dati su Passeggiata Furba (Smart Walk Dog) — conforme al GDPR art. 17." />
+<meta name="robots" content="noindex,nofollow" />
+<meta name="theme-color" content="#FFF5E6" />
+<meta http-equiv="X-Content-Type-Options" content="nosniff" />
+<meta http-equiv="Referrer-Policy" content="no-referrer" />
+<style>
+  /* ============================================================
+     DESIGN SYSTEM — Passeggiata Furba (Smart Walk Dog)
+     Stesso linguaggio visivo di privacy.html
+     ============================================================ */
+  :root{
+    --bg:#FFF5E6;
+    --green:#1E3D2F;
+    --green-bright:#2D5A3D;
+    --orange:#F47C35;
+    --orange-soft:#FFE7D6;
+    --warning:#B8860B;
+    --warning-soft:#FFF4D6;
+    --surface:#FFFFFF;
+    --border:#E8E8E8;
+    --text:#2B2B2B;
+    --muted:#5A5A5A;
+    --danger:#A8201A;
+    --r-card:16px;
+    --r-hero:24px;
+    --r-pill:9999px;
+    --pad:24px;
+    --gap:24px;
+    --safe-bottom:env(safe-area-inset-bottom,0px);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    font-weight:400;
+    line-height:1.55;
+    letter-spacing:.1px;
+    padding-bottom:calc(72px + var(--safe-bottom));
+  }
+
+  .screen{
+    max-width:480px;
+    margin:0 auto;
+    min-height:100vh;
+    background:var(--bg);
+    position:relative;
+  }
+
+  /* ---------- App header ---------- */
+  .app-header{
+    padding:calc(var(--pad) + env(safe-area-inset-top,0px)) var(--pad) var(--gap);
+  }
+  .app-header .brand{
+    display:flex;align-items:center;gap:10px;
+    font-size:30px;font-weight:700;color:var(--green);
+    line-height:1.1;
+  }
+  .app-header .brand .logo{font-size:30px;line-height:1;}
+  .app-header .subtitle{
+    margin-top:6px;
+    font-size:14px;color:var(--muted);font-weight:400;
+    padding-left:2px;
+  }
+  .app-header .back-link{
+    display:inline-flex;align-items:center;gap:6px;
+    margin-top:14px;font-size:13px;font-weight:600;
+    color:var(--green-bright);text-decoration:none;
+  }
+  .app-header .back-link:hover{text-decoration:underline;}
+
+  /* ---------- Hero card ---------- */
+  .hero{
+    margin:0 var(--pad) var(--gap);
+    background:var(--green);
+    border-radius:var(--r-hero);
+    padding:28px var(--pad);
+    color:#fff;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero .eyebrow{
+    font-size:12px;font-weight:600;letter-spacing:1.2px;
+    text-transform:uppercase;color:rgba(255,255,255,.72);
+  }
+  .hero h1{
+    margin-top:10px;
+    font-size:26px;font-weight:700;line-height:1.2;
+    color:#fff;max-width:90%;
+  }
+  .hero .emoji{font-size:40px;line-height:1;margin:14px 0 12px;display:block;}
+  .hero p{
+    font-size:15px;color:rgba(255,255,255,.88);
+    font-weight:400;line-height:1.5;max-width:92%;
+  }
+  .hero .gdpr-pill{
+    display:inline-flex;align-items:center;gap:6px;
+    margin-top:18px;
+    background:rgba(255,255,255,.15);
+    padding:6px 12px;border-radius:var(--r-pill);
+    font-size:12px;font-weight:600;
+  }
+
+  /* ---------- Stat strip ---------- */
+  .stat-strip{
+    margin:0 var(--pad) var(--gap);
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--r-card);
+    display:flex;
+    overflow:hidden;
+  }
+  .stat-strip .stat{
+    flex:1;padding:16px 14px;text-align:center;
+    border-right:1px solid var(--border);
+  }
+  .stat-strip .stat:last-child{border-right:none;}
+  .stat-strip .stat .label{
+    font-size:11px;font-weight:600;letter-spacing:.6px;
+    text-transform:uppercase;color:var(--muted);
+  }
+  .stat-strip .stat .value{
+    margin-top:6px;font-size:14px;font-weight:700;color:var(--green);
+    line-height:1.3;
+  }
+
+  /* ---------- Section label ---------- */
+  .section-label{
+    margin:0 var(--pad) 12px;
+    font-size:12px;font-weight:600;letter-spacing:1px;
+    text-transform:uppercase;color:var(--green-bright);
+  }
+
+  /* ---------- Cards ---------- */
+  .card{
+    margin:0 var(--pad) var(--gap);
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--r-card);
+    padding:20px;
+  }
+  .card.warning{
+    border-color:var(--warning);
+    background:var(--warning-soft);
+  }
+  .card .card-head{
+    display:flex;align-items:center;gap:10px;
+    margin-bottom:12px;
+  }
+  .card .card-head .ico{font-size:22px;line-height:1;}
+  .card .card-head h2{
+    font-size:16px;font-weight:700;color:var(--text);line-height:1.25;
+  }
+  .card p{
+    font-size:14.5px;color:#444;line-height:1.6;
+  }
+  .card p + p{margin-top:10px;}
+  .card strong{color:var(--green-bright);font-weight:700;}
+
+  .bullets{list-style:none;margin-top:12px;}
+  .bullets li{
+    position:relative;padding-left:24px;margin-bottom:8px;
+    font-size:14.5px;color:#444;line-height:1.5;
+  }
+  .bullets li::before{
+    content:"🐾";
+    position:absolute;left:0;top:0;
+    font-size:13px;line-height:1.55;
+  }
+  .bullets.danger li::before{content:"⚠️";font-size:13px;}
+  .bullets li strong{color:var(--green-bright);}
+
+  /* ---------- Progress indicator ---------- */
+  .progress{
+    margin:0 var(--pad) 16px;
+    display:flex;align-items:center;gap:8px;
+    font-size:12px;font-weight:600;color:var(--muted);
+  }
+  .progress .bar{
+    flex:1;height:4px;background:var(--border);
+    border-radius:2px;overflow:hidden;
+  }
+  .progress .bar .fill{
+    height:100%;background:var(--orange);
+    width:33%;transition:width .3s ease;
+  }
+
+  /* ---------- Form ---------- */
+  .form-step{display:none;}
+  .form-step.active{display:block;}
+
+  .field{margin-bottom:18px;}
+  .field label{
+    display:block;
+    font-size:13px;font-weight:600;
+    color:var(--text);
+    margin-bottom:6px;
+  }
+  .field label .req{
+    color:var(--orange);margin-left:4px;font-weight:700;
+  }
+  .field input[type=email],
+  .field input[type=text],
+  .field select,
+  .field textarea{
+    width:100%;
+    background:var(--bg);
+    border:1.5px solid var(--border);
+    border-radius:12px;
+    padding:13px 14px;
+    font-size:15px;
+    font-family:inherit;
+    color:var(--text);
+    transition:border-color .15s ease;
+  }
+  .field input:focus,
+  .field select:focus,
+  .field textarea:focus{
+    outline:none;
+    border-color:var(--green-bright);
+  }
+  .field input::placeholder,
+  .field textarea::placeholder{color:#A8A8A8;}
+  .field textarea{min-height:80px;resize:vertical;}
+  .field .hint{
+    margin-top:5px;font-size:12px;color:var(--muted);
+  }
+  .field .err{
+    margin-top:5px;font-size:12px;color:var(--danger);
+    display:none;
+  }
+  .field.invalid input,
+  .field.invalid select,
+  .field.invalid textarea{border-color:var(--danger);}
+  .field.invalid .err{display:block;}
+
+  .checkbox{
+    display:flex;align-items:flex-start;gap:10px;
+    margin:10px 0;
+    cursor:pointer;
+  }
+  .checkbox input{margin-top:3px;flex-shrink:0;}
+  .checkbox span{
+    font-size:13.5px;color:var(--text);line-height:1.45;
+  }
+  .checkbox a{color:var(--green-bright);font-weight:600;}
+
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    width:100%;
+    padding:14px 22px;
+    border-radius:var(--r-pill);
+    border:none;
+    font-size:15px;font-weight:700;
+    font-family:inherit;
+    cursor:pointer;
+    text-decoration:none;
+    transition:transform .15s ease,opacity .15s ease,background-color .15s ease;
+  }
+  .btn-primary{
+    background:var(--danger);
+    color:#fff;
+  }
+  .btn-primary:disabled{
+    background:var(--border);
+    color:var(--muted);
+    cursor:not-allowed;
+  }
+  .btn-primary:not(:disabled):active{transform:scale(.97);opacity:.92;}
+  .btn-secondary{
+    background:transparent;
+    color:var(--green-bright);
+    border:1.5px solid var(--border);
+    margin-top:10px;
+  }
+  .btn-secondary:active{transform:scale(.97);}
+  .nav-row{display:flex;gap:10px;margin-top:14px;}
+  .nav-row .btn{flex:1;}
+
+  /* ---------- Toast ---------- */
+  .toast{
+    display:none;
+    position:fixed;
+    left:50%;top:24px;
+    transform:translateX(-50%);
+    background:var(--green);
+    color:#fff;
+    padding:14px 22px;
+    border-radius:var(--r-pill);
+    font-size:14px;font-weight:600;
+    box-shadow:0 4px 14px rgba(0,0,0,.15);
+    z-index:99;
+    max-width:90%;
+    text-align:center;
+  }
+  .toast.show{
+    display:inline-flex;
+    animation:slideIn .3s ease;
+  }
+  @keyframes slideIn{from{transform:translateX(-50%) translateY(-20px);opacity:0;}to{transform:translateX(-50%) translateY(0);opacity:1;}}
+
+  /* ---------- Success state ---------- */
+  .success{
+    display:none;
+    text-align:center;
+    padding:30px 20px;
+  }
+  .success .ico{font-size:60px;display:block;margin-bottom:14px;}
+  .success h2{font-size:20px;color:var(--green);margin-bottom:10px;}
+  .success p{font-size:14.5px;color:var(--muted);line-height:1.6;max-width:340px;margin:0 auto;}
+
+  /* ---------- Paw divider ---------- */
+  .paw-divider{
+    text-align:center;
+    margin:var(--gap) var(--pad);
+    color:var(--green);
+    font-size:18px;letter-spacing:6px;
+    opacity:.55;
+    user-select:none;
+  }
+
+  /* ---------- Bottom tab bar ---------- */
+  .tabbar{
+    position:fixed;left:50%;transform:translateX(-50%);
+    bottom:0;width:100%;max-width:480px;
+    background:var(--bg);
+    border-top:1px solid var(--border);
+    display:flex;
+    height:calc(56px + var(--safe-bottom));
+    padding-bottom:var(--safe-bottom);
+    z-index:50;
+  }
+  .tabbar a{
+    flex:1;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:3px;
+    text-decoration:none;
+    color:var(--muted);
+    font-size:10px;font-weight:600;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .tabbar a .tab-ico{font-size:20px;line-height:1;}
+  .tabbar a.active{color:var(--green);}
+  .tabbar a.active .tab-ico{transform:scale(1.05);}
+
+  a:focus-visible,.cta:focus-visible,.btn:focus-visible{outline:3px solid var(--orange);outline-offset:2px;}
+
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto;}
+    *{transition:none!important;animation:none!important;}
+  }
+</style>
+</head>
+<body>
+<div class="screen">
+
+  <!-- 1. App header -->
+  <header class="app-header">
+    <div class="brand"><span class="logo">🐕</span> Passeggiata Furba</div>
+    <div class="subtitle">Smart Walk Dog · Eliminazione account & dati</div>
+    <a class="back-link" href="https://passeggiata-furba-legal.vercel.app/privacy">← Torna all'informativa privacy</a>
+  </header>
+
+  <!-- 2. Hero card -->
+  <section class="hero" aria-labelledby="hero-title">
+    <span class="eyebrow">Diritto alla cancellazione · GDPR art. 17</span>
+    <h1 id="hero-title">Cancella il tuo account e i tuoi dati</h1>
+    <span class="emoji">🗑️</span>
+    <p>Hai il diritto di richiedere la cancellazione completa del tuo account e di tutti i dati associati. La richiesta viene processata entro 48 ore.</p>
+    <span class="gdpr-pill">⚖️ Conforme GDPR · UE 2016/679</span>
+  </section>
+
+  <!-- 3. Stat strip -->
+  <section class="stat-strip" aria-label="Tempistiche">
+    <div class="stat">
+      <div class="label">Tempo stimato</div>
+      <div class="value">48 ore</div>
+    </div>
+    <div class="stat">
+      <div class="label">Conformità</div>
+      <div class="value">GDPR art. 17</div>
+    </div>
+    <div class="stat">
+      <div class="label">Costo</div>
+      <div class="value">Gratis</div>
+    </div>
+  </section>
+
+  <!-- 4. Warning card -->
+  <div class="section-label">Leggi prima di continuare</div>
+  <section class="card warning" aria-labelledby="warn-title">
+    <div class="card-head"><span class="ico">⚠️</span><h2 id="warn-title">Azione irreversibile</h2></div>
+    <p>La cancellazione dell'account è <strong>permanente e irreversibile</strong>. I seguenti dati verranno eliminati definitivamente:</p>
+    <ul class="bullets danger">
+      <li><strong>Account & profilo:</strong> email, nickname, metodo di accesso OAuth</li>
+      <li><strong>Profilo del cane:</strong> nome, razza, foto, record sanitari</li>
+      <li><strong>Passeggiate:</strong> percorsi GPS, statistiche, foto, note</li>
+      <li><strong>Abbonamento:</strong> cancellazione immediata di Premium, nessun rimborso</li>
+      <li><strong>Cache & backup:</strong> eliminazione completa entro 30 giorni</li>
+    </ul>
+    <p style="margin-top:14px;font-size:13.5px;color:var(--warning);"><strong>⚠️ Non potrai recuperare i dati dopo la cancellazione.</strong></p>
+  </section>
+
+  <!-- 5. Multi-step form -->
+  <div class="section-label">Modulo di richiesta</div>
+
+  <div class="progress" aria-live="polite">
+    <span id="stepIndicator">Passo 1 di 3</span>
+    <div class="bar"><div class="fill" id="progressFill"></div></div>
+  </div>
+
+  <section class="card" aria-labelledby="form-title">
+    <div class="card-head"><span class="ico">📝</span><h2 id="form-title">Richiesta di cancellazione</h2></div>
+
+    <form id="deleteForm" novalidate>
+
+      <!-- Step 1: Identità -->
+      <div class="form-step active" id="step1" role="group" aria-label="Step 1: Identità">
+        <div class="field">
+          <label for="email">Email dell'account <span class="req" aria-hidden="true">*</span></label>
+          <input type="email" id="email" name="email" placeholder="es. mario.rossi@email.com" required autocomplete="email" aria-required="true" />
+          <div class="err" role="alert">Inserisci un indirizzo email valido.</div>
+          <div class="hint">L'email con cui ti sei registrato/a su Passeggiata Furba.</div>
+        </div>
+
+        <div class="field">
+          <label for="name">Nome completo <span style="color:var(--muted);font-weight:400;">(opzionale)</span></label>
+          <input type="text" id="name" name="name" placeholder="es. Mario Rossi" autocomplete="name" />
+        </div>
+
+        <div class="field">
+          <label for="reason">Motivo della cancellazione <span style="color:var(--muted);font-weight:400;">(opzionale)</span></label>
+          <select id="reason" name="reason">
+            <option value="">— Seleziona —</option>
+            <option value="privacy">Preoccupazioni sulla privacy</option>
+            <option value="not-using">Non uso più l'app</option>
+            <option value="too-expensive">Costo troppo elevato</option>
+            <option value="switching">Passato a un'altra app</option>
+            <option value="other">Altro</option>
+          </select>
+        </div>
+
+        <div class="nav-row">
+          <button type="button" class="btn btn-secondary" onclick="goToStep(1,2)">Avanti →</button>
+        </div>
+      </div>
+
+      <!-- Step 2: Conferma -->
+      <div class="form-step" id="step2" role="group" aria-label="Step 2: Conferma">
+        <div class="card-head"><span class="ico">✅</span><h2 style="font-size:15px;">Conferma di comprensione</h2></div>
+
+        <p style="font-size:13.5px;color:var(--muted);margin-bottom:12px;">Per procedere conferma i seguenti punti:</p>
+
+        <label class="checkbox">
+          <input type="checkbox" id="confirm1" required aria-required="true" />
+          <span>Ho letto e compreso che <strong>la cancellazione è irreversibile</strong> e tutti i dati verranno eliminati permanentemente.</span>
+        </label>
+
+        <label class="checkbox">
+          <input type="checkbox" id="confirm2" required aria-required="true" />
+          <span>Comprendo che il mio <strong>abbonamento Premium sarà cancellato</strong> immediatamente, senza diritto di rimborso.</span>
+        </label>
+
+        <label class="checkbox">
+          <input type="checkbox" id="confirm3" required aria-required="true" />
+          <span>Accetto che i dati vengano eliminati <strong>entro 30 giorni</strong> anche dai sistemi di backup.</span>
+        </label>
+
+        <div class="field" style="margin-top:18px;">
+          <label for="confirmEmail">Riscrivi la tua email per confermare <span class="req" aria-hidden="true">*</span></label>
+          <input type="email" id="confirmEmail" placeholder="Riscrivi l'email" required aria-required="true" />
+          <div class="err" role="alert">Le email non corrispondono.</div>
+        </div>
+
+        <div class="nav-row">
+          <button type="button" class="btn btn-secondary" onclick="goToStep(2,1)">← Indietro</button>
+          <button type="button" class="btn btn-secondary" onclick="goToStep(2,3)">Avanti →</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Invio -->
+      <div class="form-step" id="step3" role="group" aria-label="Step 3: Invio">
+        <div class="card-head"><span class="ico">📤</span><h2 style="font-size:15px;">Invia la richiesta</h2></div>
+
+        <p style="font-size:13.5px;color:var(--muted);margin-bottom:14px;">
+          Verifica i dati e invia. La richiesta sarà inoltrata a <strong>amzajaguar@gmail.com</strong> (Titolare del trattamento: Hamza Jaoual)
+          e processata entro 48 ore.
+        </p>
+
+        <div id="summary" style="font-size:13.5px;background:var(--bg);padding:12px;border-radius:8px;margin-bottom:18px;line-height:1.7;">
+          <!-- Riepilogo compilato dinamicamente -->
+        </div>
+
+        <label class="checkbox">
+          <input type="checkbox" id="finalConfirm" required aria-required="true" />
+          <span>Confermo di voler procedere con la cancellazione.</span>
+        </label>
+
+        <button type="button" id="submitBtn" class="btn btn-primary" disabled onclick="submitRequest()">
+          🗑️ Cancella il mio account
+        </button>
+
+        <div class="nav-row">
+          <button type="button" class="btn btn-secondary" onclick="goToStep(3,2)">← Indietro</button>
+        </div>
+      </div>
+
+    </form>
+
+    <!-- Success state -->
+    <div class="success" id="successState">
+      <span class="ico">✅</span>
+      <h2>Richiesta inviata!</h2>
+      <p>La tua richiesta di cancellazione è stata inoltrata a <strong>amzajaguar@gmail.com</strong>.<br><br>
+      Riceverai una conferma entro <strong>48 ore</strong>. I tuoi dati saranno eliminati permanentemente entro 30 giorni.</p>
+    </div>
+
+  </section>
+
+  <div class="paw-divider" aria-hidden="true">🐾 🐾 🐾</div>
+
+  <!-- 6. Cosa succede dopo -->
+  <div class="section-label">Cosa succede dopo</div>
+  <section class="card">
+    <div class="card-head"><span class="ico">📋</span><h2>Il processo di cancellazione</h2></div>
+    <ul class="bullets">
+      <li><strong>1. Ricezione:</strong> La richiesta arriva al titolare del trattamento.</li>
+      <li><strong>2. Verifica identità:</strong> Ti contatteremo via email per confermare l'identità.</li>
+      <li><strong>3. Cancellazione:</strong> Tutti i dati vengono eliminati entro 48 ore.</li>
+      <li><strong>4. Backup:</strong> I backup residui vengono puliti entro 30 giorni.</li>
+      <li><strong>5. Conferma:</strong> Ti invieremo una conferma scritta della cancellazione.</li>
+    </ul>
+  </section>
+
+  <!-- 7. Alternativa email -->
+  <section class="card">
+    <div class="card-head"><span class="ico">✉️</span><h2>Preferisci inviare un'email?</h2></div>
+    <p>Puoi inviare la tua richiesta direttamente a <strong>amzajaguar@gmail.com</strong> dal tuo client preferito.</p>
+    <p style="margin-top:10px;font-size:12.5px;color:var(--muted);">
+      Includi: nome, email dell'account, motivo della richiesta. Indica come oggetto: <em>"Cancellazione account — Passeggiata Furba"</em>.
+    </p>
+    <a href="mailto:amzajaguar@gmail.com?subject=Cancellazione%20account%20%E2%80%94%20Passeggiata%20Furba&body=Richiedo%20la%20cancellazione%20del%20mio%20account%20e%20di%20tutti%20i%20dati%20associati%20su%20Passeggiata%20Furba%20(Smart%20Walk%20Dog).%0D%0A%0D%0AEmail%20account%3A%20%0D%0ANome%3A%20%0D%0AMotivo%3A%20%0D%0A%0D%0AConfermo%20di%20voler%20procedere%20con%20la%20cancellazione%20irreversibile%20degli%20account%20e%20dei%20dati." class="btn btn-secondary" style="margin-top:14px;display:inline-flex;text-decoration:none;justify-content:center;">
+      ✉️ Apri l'email
+    </a>
+  </section>
+
+  <!-- 8. Footer -->
+  <footer style="text-align:center;padding:24px var(--pad) calc(48px + var(--safe-bottom));color:var(--muted);font-size:12px;line-height:1.6;">
+    <div style="margin-bottom:6px;">© 2026 Passeggiata Furba · Smart Walk Dog</div>
+    <div>Titolare: Hamza Jaoual · <a href="mailto:amzajaguar@gmail.com" style="color:var(--green-bright);">amzajaguar@gmail.com</a></div>
+    <div style="margin-top:8px;">
+      <a href="https://passeggiata-furba-legal.vercel.app/privacy" style="color:var(--green-bright);text-decoration:none;">Privacy</a> ·
+      <a href="https://passeggiata-furba-legal.vercel.app/terms" style="color:var(--green-bright);text-decoration:none;">Termini</a>
+    </div>
+  </footer>
+
+  <!-- 9. Tab bar -->
+  <nav class="tabbar" aria-label="Navigazione">
+    <a href="https://passeggiata-furba-legal.vercel.app/privacy"><span class="tab-ico">🔒</span>Privacy</a>
+    <a href="https://passeggiata-furba-legal.vercel.app/terms"><span class="tab-ico">📜</span>Termini</a>
+    <a href="https://passeggiata-furba-legal.vercel.app/delete-account" class="active"><span class="tab-ico">🗑️</span>Elimina</a>
+  </nav>
+
+  <!-- 10. Toast -->
+  <div class="toast" id="toast" role="status" aria-live="polite">✅ Richiesta inviata!</div>
+
+</div>
+
+<script>
+  // Minimal inline JS — no external scripts, no cookies, no localStorage.
+  // All processing client-side; mailto: launches user's email client.
+
+  function goToStep(current, target) {
+    if (current === 1 && target === 2 && !validateStep1()) return;
+    if (current === 2 && target === 3 && !validateStep2()) return;
+
+    document.getElementById('step' + current).classList.remove('active');
+    document.getElementById('step' + target).classList.add('active');
+
+    var fillWidth = (target === 1) ? '33%' : (target === 2) ? '66%' : '100%';
+    document.getElementById('progressFill').style.width = fillWidth;
+    document.getElementById('stepIndicator').textContent = 'Passo ' + target + ' di 3';
+
+    if (target === 3) renderSummary();
+
+    // Scroll to top of card
+    document.querySelector('.progress').scrollIntoView({behavior: 'smooth', block: 'start'});
+  }
+
+  function validateStep1() {
+    var email = document.getElementById('email');
+    var re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    var ok = re.test(email.value.trim());
+    toggleErr(email, !ok);
+    return ok;
+  }
+
+  function validateStep2() {
+    var valid = true;
+    ['confirm1','confirm2','confirm3'].forEach(function(id){
+      if (!document.getElementById(id).checked) valid = false;
+    });
+    // email match
+    var e1 = document.getElementById('email').value.trim();
+    var e2 = document.getElementById('confirmEmail');
+    if (e2.value.trim() !== e1) {
+      toggleErr(e2, true);
+      valid = false;
+    } else {
+      toggleErr(e2, false);
+    }
+    if (!valid) {
+      showToast('⚠️ Completa tutti i campi per continuare');
+    }
+    return valid;
+  }
+
+  function toggleErr(input, isErr) {
+    var field = input.closest('.field');
+    if (isErr) field.classList.add('invalid');
+    else field.classList.remove('invalid');
+  }
+
+  function renderSummary() {
+    var email = document.getElementById('email').value.trim();
+    var name = document.getElementById('name').value.trim() || '(non specificato)';
+    var reason = document.getElementById('reason');
+    var reasonText = reason.options[reason.selectedIndex].text;
+    document.getElementById('summary').innerHTML =
+      '<strong>Email:</strong> ' + escapeHtml(email) + '<br>' +
+      '<strong>Nome:</strong> ' + escapeHtml(name) + '<br>' +
+      '<strong>Motivo:</strong> ' + escapeHtml(reasonText) + '<br>' +
+      '<strong>Data richiesta:</strong> ' + new Date().toLocaleString('it-IT');
+  }
+
+  function escapeHtml(s) {
+    return s.replace(/[&<>"']/g, function(c) {
+      return {'&':'&','<':'<','>':'>','"':'"',"'":'&#39;'}[c];
+    });
+  }
+
+  // Enable submit button when final checkbox is ticked
+  document.getElementById('finalConfirm').addEventListener('change', function() {
+    document.getElementById('submitBtn').disabled = !this.checked;
+  });
+
+  function submitRequest() {
+    var email = document.getElementById('email').value.trim();
+    var name = document.getElementById('name').value.trim();
+    var reason = document.getElementById('reason');
+    var reasonText = reason.options[reason.selectedIndex].text;
+
+    var subject = 'Cancellazione account — Passeggiata Furba';
+    var body = 'Richiedo la cancellazione del mio account e di tutti i dati associati su Passeggiata Furba (Smart Walk Dog).\n\n' +
+               'Email account: ' + email + '\n' +
+               'Nome: ' + (name || '(non specificato)') + '\n' +
+               'Motivo: ' + reasonText + '\n' +
+               'Data: ' + new Date().toLocaleString('it-IT') + '\n\n' +
+               'Confermo di voler procedere con la cancellazione irreversibile degli account e dei dati (GDPR art. 17).\n\n' +
+               'Inviato dal modulo pubblico: https://passeggiata-furba-legal.vercel.app/delete-account';
+
+    var mailto = 'mailto:amzajaguar@gmail.com?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+
+    // Show success state
+    document.getElementById('deleteForm').style.display = 'none';
+    document.getElementById('successState').style.display = 'block';
+    showToast('✅ Richiesta inviata!');
+
+    // Launch user's email client
+    window.location.href = mailto;
+
+    // Scroll to success
+    document.getElementById('successState').scrollIntoView({behavior:'smooth', block:'center'});
+  }
+
+  function showToast(msg) {
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(function(){ t.classList.remove('show'); }, 3500);
+  }
+
+  // Real-time email validation
+  document.getElementById('email').addEventListener('blur', function() {
+    if (this.value) validateStep1();
+  });
+  document.getElementById('confirmEmail').addEventListener('input', function() {
+    if (this.value === document.getElementById('email').value) {
+      toggleErr(this, false);
+    }
+  });
+</script>
+</body>
+</html>

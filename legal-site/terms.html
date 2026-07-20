@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Termini di Servizio · Passeggiata Furba</title>
+<meta name="description" content="Termini di Servizio di Passeggiata Furba (Smart Walk Dog) — abbonamenti, limitazioni, legge applicabile." />
+<meta name="theme-color" content="#FFF5E6" />
+<style>
+  /* ============================================================
+     DESIGN SYSTEM — Passeggiata Furba (Smart Walk Dog)
+     Background: warm cream #FFF5E6 (signature)
+     Primary green: #1E3D2F | bright green #2D5A3D
+     Accent orange: #F47C35
+     Surface: #FFFFFF, border #E8E8E8
+     Text #2B2B2B, muted #8B8B8B
+     Flat design — depth from 1px/2px borders + radii
+     Radii: card 16px, hero-card 24px, pill 9999px
+     Spacing: 24px screen padding & vertical gaps
+     ============================================================ */
+  :root{
+    --bg:#FFF5E6;
+    --green:#1E3D2F;
+    --green-bright:#2D5A3D;
+    --orange:#F47C35;
+    --surface:#FFFFFF;
+    --border:#E8E8E8;
+    --text:#2B2B2B;
+    --muted:#5A5A5A;
+    --r-card:16px;
+    --r-hero:24px;
+    --r-pill:9999px;
+    --pad:24px;
+    --gap:24px;
+    --safe-bottom:env(safe-area-inset-bottom,0px);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    font-weight:400;
+    line-height:1.55;
+    letter-spacing:.1px;
+    padding-bottom:calc(72px + var(--safe-bottom));
+  }
+
+  .screen{
+    max-width:480px;
+    margin:0 auto;
+    min-height:100vh;
+    background:var(--bg);
+    position:relative;
+  }
+
+  /* ---------- App header ---------- */
+  .app-header{
+    padding:calc(var(--pad) + env(safe-area-inset-top,0px)) var(--pad) var(--gap);
+  }
+  .app-header .brand{
+    display:flex;align-items:center;gap:10px;
+    font-size:30px;font-weight:700;color:var(--green);
+    line-height:1.1;
+  }
+  .app-header .brand .logo{font-size:30px;line-height:1;}
+  .app-header .subtitle{
+    margin-top:6px;
+    font-size:14px;color:var(--muted);font-weight:400;
+    padding-left:2px;
+  }
+
+  /* ---------- Hero card ---------- */
+  .hero{
+    margin:0 var(--pad) var(--gap);
+    background:var(--green);
+    border-radius:var(--r-hero);
+    padding:28px var(--pad);
+    color:#fff;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero .eyebrow{
+    font-size:12px;font-weight:600;letter-spacing:1.2px;
+    text-transform:uppercase;color:rgba(255,255,255,.72);
+  }
+  .hero h1{
+    margin-top:10px;
+    font-size:26px;font-weight:700;line-height:1.2;
+    color:#fff;max-width:90%;
+  }
+  .hero .emoji{font-size:40px;line-height:1;margin:14px 0 12px;display:block;}
+  .hero p{
+    font-size:15px;color:rgba(255,255,255,.88);
+    font-weight:400;line-height:1.5;max-width:92%;
+  }
+  .hero .cta{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    margin-top:20px;
+    background:#fff;color:var(--green);
+    font-size:15px;font-weight:700;
+    padding:13px 22px;border-radius:var(--r-pill);
+    text-decoration:none;
+    transition:transform .15s ease, opacity .15s ease;
+  }
+  .hero .cta:active{transform:scale(.97);opacity:.9;}
+
+  /* ---------- Stat strip ---------- */
+  .stat-strip{
+    margin:0 var(--pad) var(--gap);
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--r-card);
+    display:flex;
+    overflow:hidden;
+  }
+  .stat-strip .stat{
+    flex:1;padding:16px 14px;text-align:center;
+    border-right:1px solid var(--border);
+  }
+  .stat-strip .stat:last-child{border-right:none;}
+  .stat-strip .stat .label{
+    font-size:11px;font-weight:600;letter-spacing:.6px;
+    text-transform:uppercase;color:var(--muted);
+  }
+  .stat-strip .stat .value{
+    margin-top:6px;font-size:14px;font-weight:700;color:var(--green);
+    line-height:1.3;
+  }
+
+  /* ---------- Section label ---------- */
+  .section-label{
+    margin:0 var(--pad) 12px;
+    font-size:12px;font-weight:600;letter-spacing:1px;
+    text-transform:uppercase;color:var(--green-bright);
+  }
+
+  /* ---------- Content list cards ---------- */
+  .card{
+    margin:0 var(--pad) var(--gap);
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--r-card);
+    padding:20px;
+  }
+  .card.featured{
+    border:2px solid var(--green);
+  }
+  .card .card-head{
+    display:flex;align-items:center;gap:10px;
+    margin-bottom:12px;
+  }
+  .card .card-head .ico{font-size:22px;line-height:1;}
+  .card .card-head h2{
+    font-size:16px;font-weight:700;color:var(--text);line-height:1.25;
+  }
+  .card p{
+    font-size:14.5px;color:#444;line-height:1.6;
+  }
+  .card p + p{margin-top:10px;}
+  .card strong{color:var(--green-bright);font-weight:700;}
+
+  .bullets{list-style:none;margin-top:12px;}
+  .bullets li{
+    position:relative;padding-left:24px;margin-bottom:8px;
+    font-size:14.5px;color:#444;line-height:1.5;
+  }
+  .bullets li::before{
+    content:"🐾";
+    position:absolute;left:0;top:0;
+    font-size:13px;line-height:1.55;
+  }
+  .bullets li strong{color:var(--green-bright);}
+
+  /* ---------- Paw divider ---------- */
+  .paw-divider{
+    text-align:center;
+    margin:var(--gap) var(--pad);
+    color:var(--green);
+    font-size:18px;letter-spacing:6px;
+    opacity:.55;
+    user-select:none;
+  }
+
+  /* ---------- Bottom tab bar (fixed) ---------- */
+  .tabbar{
+    position:fixed;left:50%;transform:translateX(-50%);
+    bottom:0;width:100%;max-width:480px;
+    background:var(--bg);
+    border-top:1px solid var(--border);
+    display:flex;
+    height:calc(56px + var(--safe-bottom));
+    padding-bottom:var(--safe-bottom);
+    z-index:50;
+  }
+  .tabbar a{
+    flex:1;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:3px;
+    text-decoration:none;
+    color:var(--muted);
+    font-size:10px;font-weight:600;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .tabbar a .tab-ico{font-size:20px;line-height:1;}
+  .tabbar a.active{color:var(--green);}
+  .tabbar a.active .tab-ico{transform:scale(1.05);}
+
+  a:focus-visible,.cta:focus-visible{outline:3px solid var(--orange);outline-offset:2px;}
+
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto;}
+    *{transition:none!important;}
+  }
+</style>
+</head>
+<body>
+<div class="screen">
+
+  <!-- 1. App header -->
+  <header class="app-header">
+    <div class="brand"><span class="logo">🐕</span> Passeggiata Furba</div>
+    <div class="subtitle">Smart Walk Dog · Termini di Servizio</div>
+  </header>
+
+  <!-- 2. Hero card -->
+  <section class="hero">
+    <span class="eyebrow">Termini &amp; Condizioni</span>
+    <h1>Le regole della nostra passeggiata</h1>
+    <span class="emoji">🐶</span>
+    <p>Di seguito i termini che regolano l'uso di Passeggiata Furba. Utilizzando l'app accetti queste condizioni.</p>
+    <a class="cta" href="mailto:amzajaguar@gmail.com">✉️ Scrivici per dubbi</a>
+  </section>
+
+  <!-- 3. Stat strip -->
+  <section class="stat-strip">
+    <div class="stat">
+      <div class="label">Data</div>
+      <div class="value">16 Luglio 2026</div>
+    </div>
+    <div class="stat">
+      <div class="label">Legge</div>
+      <div class="value">Italiana</div>
+    </div>
+    <div class="stat">
+      <div class="label">Titolare</div>
+      <div class="value">H. Jaoual</div>
+    </div>
+  </section>
+
+  <!-- 4. Content cards -->
+  <div class="section-label">Titolare &amp; Servizio</div>
+  <section class="card featured">
+    <div class="card-head"><span class="ico">🏢</span><h2>Titolare e identità</h2></div>
+    <p>L'app <strong>Passeggiata Furba</strong> è distribuita con il brand <strong>Smart Walk Dog</strong>.</p>
+    <p>Titolare: <strong>Hamza Jaoual</strong> · <strong>amzajaguar@gmail.com</strong></p>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><span class="ico">🐕</span><h2>Descrizione del servizio</h2></div>
+    <ul class="bullets">
+      <li>Tracer delle passeggiate con GPS in foreground</li>
+      <li>Distanza, durata e percorso per ogni uscita</li>
+      <li>Storico e statistiche delle attività</li>
+      <li>Promemoria di salute (vaccini, antiparassitari)</li>
+      <li>Allegati foto alle passeggiate</li>
+      <li>Piano premium con funzionalità avanzate</li>
+    </ul>
+  </section>
+
+  <div class="paw-divider">🐾 🐾 🐾</div>
+
+  <div class="section-label">Abbonamenti</div>
+  <section class="card featured">
+    <div class="card-head"><span class="ico">💳</span><h2>Abbonamento e pagamenti</h2></div>
+    <ul class="bullets">
+      <li>Gestiti interamente da <strong>Google Play Billing</strong></li>
+      <li>Piani disponibili: <strong>Pro</strong> e <strong>Pro Family</strong></li>
+      <li>Cancelabile in qualsiasi momento da Google Play Subscriptions</li>
+      <li>Premium attivo fino alla scadenza del periodo già pagato</li>
+      <li><strong>Nessun dato di pagamento è memorizzato dall'app</strong></li>
+    </ul>
+  </section>
+
+  <div class="section-label">Requisiti &amp; Limitazioni</div>
+
+  <section class="card">
+    <div class="card-head"><span class="ico">📱</span><h2>Requisiti tecnici</h2></div>
+    <ul class="bullets">
+      <li>Android 5.0 o superiore</li>
+      <li>GPS attivo per il tracciamento</li>
+      <li>Fotocamera o galleria (opzionale)</li>
+      <li>Connessione internet solo per premium e sync — la base funziona offline</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><span class="ico">⚠️</span><h2>Limitazioni di responsabilità</h2></div>
+    <ul class="bullets">
+      <li>L'app <strong>non sostituisce la supervisione</strong> del cane da parte tua</li>
+      <li>I promemoria <strong>non sostituiscono il veterinario</strong></li>
+      <li>La precisione del GPS può variare in base all'ambiente</li>
+    </ul>
+  </section>
+
+  <div class="paw-divider">🐾 🐾 🐾</div>
+
+  <div class="section-label">Uso consentito</div>
+
+  <section class="card">
+    <div class="card-head"><span class="ico">🚫</span><h2>Comportamenti vietati</h2></div>
+    <ul class="bullets">
+      <li>Uso illegale, di sorveglianza o molestie</li>
+      <li>Decompilare o modificare il codice dell'app</li>
+      <li>Rivendere o ridistribuire il servizio</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><span class="ico">🔌</span><h2>Cessazione del servizio</h2></div>
+    <ul class="bullets">
+      <li>Sospensione per manutenzione o forza maggiore</li>
+      <li>Sospensione in caso di violazione dei termini</li>
+      <li>Rimborsi secondo la policy di Google Play</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><span class="ico">🔄</span><h2>Modifiche ai termini</h2></div>
+    <p>Le modifiche saranno pubblicate in questa pagina con la data di aggiornamento. Le modifiche sostanziali saranno notificate anche all'interno dell'app.</p>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><span class="ico">⚖️</span><h2>Legge applicabile</h2></div>
+    <p>I presenti termini sono regolati dalla <strong>legge italiana</strong>. Foro competente: la residenza del consumatore o quella del titolare.</p>
+  </section>
+
+  <!-- 6. Second contact hero -->
+  <section class="hero">
+    <span class="eyebrow">Hai domande sui termini?</span>
+    <h1>Contatta il titolare</h1>
+    <span class="emoji">🌳</span>
+    <p>Scrivici per chiarimenti su abbonamenti, limitazioni o qualsiasi altro aspetto del servizio.</p>
+    <a class="cta" href="mailto:amzajaguar@gmail.com">✉️ amzajaguar@gmail.com</a>
+  </section>
+
+</div>
+
+<!-- 7. Bottom tab bar -->
+<nav class="tabbar" aria-label="Navigazione principale">
+  <a href="#" aria-label="Home"><span class="tab-ico">🏠</span>Home</a>
+  <a href="#" aria-label="Profilo"><span class="tab-ico">🐾</span>Profilo</a>
+  <a href="#" aria-label="Salute"><span class="tab-ico">💚</span>Salute</a>
+  <a href="#" aria-label="Mappa"><span class="tab-ico">🗺️</span>Mappa</a>
+  <a href="#" class="active" aria-label="Impostazioni"><span class="tab-ico">⚙️</span>Impost.</a>
+</nav>
+
+</body>
+</html>

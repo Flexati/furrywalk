@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Privacy Policy · Passeggiata Furba</title>
+<meta name="description" content="Informativa sulla privacy di Passeggiata Furba (Smart Walk Dog) — trattamento dati, GPS, GDPR." />
+<meta name="theme-color" content="#FFF5E6" />
+<style>
+  /* ============================================================
+     DESIGN SYSTEM — Passeggiata Furba (Smart Walk Dog)
+     Background: warm cream #FFF5E6 (signature)
+     Primary green: #1E3D2F | bright green #2D5A3D
+     Accent orange: #F47C35
+     Surface: #FFFFFF, border #E8E8E8
+     Text #2B2B2B, muted #8B8B8B
+     Flat design — depth from 1px/2px borders + radii
+     Radii: card 16px, hero-card 24px, pill 9999px
+     Spacing: 24px screen padding & vertical gaps
+     ============================================================ */
+  :root{
+    --bg:#FFF5E6;
+    --green:#1E3D2F;
+    --green-bright:#2D5A3D;
+    --orange:#F47C35;
+    --surface:#FFFFFF;
+    --border:#E8E8E8;
+    --text:#2B2B2B;
+    --muted:#5A5A5A;
+    --r-card:16px;
+    --r-hero:24px;
+    --r-pill:9999px;
+    --pad:24px;
+    --gap:24px;
+    --safe-bottom:env(safe-area-inset-bottom,0px);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+    background:var(--bg);
+    color:var(--text);
+    font-weight:400;
+    line-height:1.55;
+    letter-spacing:.1px;
+    padding-bottom:calc(72px + var(--safe-bottom));
+  }
+
+  /* App screen frame — centered mobile viewport */
+  .screen{
+    max-width:480px;
+    margin:0 auto;
+    min-height:100vh;
+    background:var(--bg);
+    position:relative;
+  }
+
+  /* ---------- App header ---------- */
+  .app-header{
+    padding:calc(var(--pad) + env(safe-area-inset-top,0px)) var(--pad) var(--gap);
+  }
+  .app-header .brand{
+    display:flex;align-items:center;gap:10px;
+    font-size:30px;font-weight:700;color:var(--green);
+    line-height:1.1;
+  }
+  .app-header .brand .logo{font-size:30px;line-height:1;}
+  .app-header .subtitle{
+    margin-top:6px;
+    font-size:14px;color:var(--muted);font-weight:400;
+    padding-left:2px;
+  }
+
+  /* ---------- Hero card (signature green rounded-3xl) ---------- */
+  .hero{
+    margin:0 var(--pad) var(--gap);
+    background:var(--green);
+    border-radius:var(--r-hero);
+    padding:28px var(--pad);
+    color:#fff;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero .eyebrow{
+    font-size:12px;font-weight:600;letter-spacing:1.2px;
+    text-transform:uppercase;color:rgba(255,255,255,.72);
+  }
+  .hero h1{
+    margin-top:10px;
+    font-size:26px;font-weight:700;line-height:1.2;
+    color:#fff;max-width:90%;
+  }
+  .hero .emoji{font-size:40px;line-height:1;margin:14px 0 12px;display:block;}
+  .hero p{
+    font-size:15px;color:rgba(255,255,255,.88);
+    font-weight:400;line-height:1.5;max-width:92%;
+  }
+  .hero .cta{
+    display:inline-flex;align-items:center;justify-content:center;gap:8px;
+    margin-top:20px;
+    background:#fff;color:var(--green);
+    font-size:15px;font-weight:700;
+    padding:13px 22px;border-radius:var(--r-pill);
+    text-decoration:none;
+    transition:transform .15s ease, opacity .15s ease;
+  }
+  .hero .cta:active{transform:scale(.97);opacity:.9;}
+
+  /* ---------- Stat strip ---------- */
+  .stat-strip{
+    margin:0 var(--pad) var(--gap);
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--r-card);
+    display:flex;
+    overflow:hidden;
+  }
+  .stat-strip .stat{
+    flex:1;padding:16px 14px;text-align:center;
+    border-right:1px solid var(--border);
+  }
+  .stat-strip .stat:last-child{border-right:none;}
+  .stat-strip .stat .label{
+    font-size:11px;font-weight:600;letter-spacing:.6px;
+    text-transform:uppercase;color:var(--muted);
+  }
+  .stat-strip .stat .value{
+    margin-top:6px;font-size:14px;font-weight:700;color:var(--green);
+    line-height:1.3;
+  }
+
+  /* ---------- Section label ---------- */
+  .section-label{
+    margin:0 var(--pad) 12px;
+    font-size:12px;font-weight:600;letter-spacing:1px;
+    text-transform:uppercase;color:var(--green-bright);
+  }
+
+  /* ---------- Content list cards ---------- */
+  .card{
+    margin:0 var(--pad) var(--gap);
+    background:var(--surface);
+    border:1px solid var(--border);
+    border-radius:var(--r-card);
+    padding:20px;
+  }
+  .card.featured{
+    border:2px solid var(--green);
+  }
+  .card .card-head{
+    display:flex;align-items:center;gap:10px;
+    margin-bottom:12px;
+  }
+  .card .card-head .ico{font-size:22px;line-height:1;}
+  .card .card-head h2{
+    font-size:16px;font-weight:700;color:var(--text);line-height:1.25;
+  }
+  .card p{
+    font-size:14.5px;color:#444;line-height:1.6;
+  }
+  .card p + p{margin-top:10px;}
+  .card strong{color:var(--green-bright);font-weight:700;}
+
+  /* bullet list inside cards */
+  .bullets{list-style:none;margin-top:12px;}
+  .bullets li{
+    position:relative;padding-left:24px;margin-bottom:8px;
+    font-size:14.5px;color:#444;line-height:1.5;
+  }
+  .bullets li::before{
+    content:"🐾";
+    position:absolute;left:0;top:0;
+    font-size:13px;line-height:1.55;
+  }
+  .bullets li strong{color:var(--green-bright);}
+
+  /* ---------- Paw divider ---------- */
+  .paw-divider{
+    text-align:center;
+    margin:var(--gap) var(--pad);
+    color:var(--green);
+    font-size:18px;letter-spacing:6px;
+    opacity:.55;
+    user-select:none;
+  }
+
+  /* ---------- Bottom tab bar (fixed) ---------- */
+  .tabbar{
+    position:fixed;left:50%;transform:translateX(-50%);
+    bottom:0;width:100%;max-width:480px;
+    background:var(--bg);
+    border-top:1px solid var(--border);
+    display:flex;
+    height:calc(56px + var(--safe-bottom));
+    padding-bottom:var(--safe-bottom);
+    z-index:50;
+  }
+  .tabbar a{
+    flex:1;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    gap:3px;
+    text-decoration:none;
+    color:var(--muted);
+    font-size:10px;font-weight:600;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .tabbar a .tab-ico{font-size:20px;line-height:1;}
+  .tabbar a.active{color:var(--green);}
+  .tabbar a.active .tab-ico{transform:scale(1.05);}
+
+  a:focus-visible,.cta:focus-visible{outline:3px solid var(--orange);outline-offset:2px;}
+
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto;}
+    *{transition:none!important;}
+  }
+</style>
+</head>
+<body>
+<div class="screen">
+
+  <!-- 1. App header -->
+  <header class="app-header">
+    <div class="brand"><span class="logo">🐕</span> Passeggiata Furba</div>
+    <div class="subtitle">Smart Walk Dog · Informativa sulla Privacy</div>
+  </header>
+
+  <!-- 2. Hero card -->
+  <section class="hero">
+    <span class="eyebrow">Privacy &amp; Dati</span>
+    <h1>I tuoi dati, sempre sotto controllo</h1>
+    <span class="emoji">🔒</span>
+    <p>Spieghiamo in modo semplice quali dati raccogliamo, dove vanno e come puoi gestirli o cancellarli in qualsiasi momento.</p>
+    <a class="cta" href="mailto:amzajaguar@gmail.com">✉️ Scrivici per i tuoi dati</a>
+  </section>
+
+  <!-- 3. Stat strip -->
+  <section class="stat-strip">
+    <div class="stat">
+      <div class="label">Aggiornamento</div>
+      <div class="value">16 Luglio 2026</div>
+    </div>
+    <div class="stat">
+      <div class="label">Conformità</div>
+      <div class="value">GDPR · UE</div>
+    </div>
+    <div class="stat">
+      <div class="label">Titolare</div>
+      <div class="value">H. Jaoual</div>
+    </div>
+  </section>
+
+  <!-- 4. Content cards -->
+  <div class="section-label">Chi raccoglie i dati</div>
+  <section class="card featured">
+    <div class="card-head"><span class="ico">👤</span><h2>Titolare del trattamento</h2></div>
+    <p><strong>Hamza Jaoual</strong> è il titolare del trattamento dei dati di Passeggiata Furba (brand <strong>Smart Walk Dog</strong>).</p>
+    <p>Per qualsiasi richiesta relativa alla privacy puoi scrivere a: <strong>amzajaguar@gmail.com</strong></p>
+  </section>
+
+  <div class="section-label">Quali dati raccogliamo</div>
+
+  <section class="card">
+    <div class="card-head"><span class="ico">🐶</span><h2>Dati dell'account</h2></div>
+    <ul class="bullets">
+      <li>Accesso tramite OAuth (Google o Apple)</li>
+      <li>Indirizzo email dell'utente</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><span class="ico">🐾</span><h2>Profilo del cane</h2></div>
+    <ul class="bullets">
+      <li>Nome, razza, età e peso</li>
+      <li>Foto del cane</li>
+      <li>Record sanitari: vaccinazioni, antiparassitari, veterinario di riferimento</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><span class="ico">🗺️</span><h2>Passeggiate</h2></div>
+    <ul class="bullets">
+      <li>Tracce GPS <strong>solo in foreground</strong> durante le passeggiate attive</li>
+      <li>Durata, distanza e percorso</li>
+      <li>Foto scattate durante l'attività</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><span class="ico">📊</span><h2>Utilizzo dell'app</h2></div>
+    <ul class="bullets">
+      <li>Analytics anonime di utilizzo</li>
+      <li>Crash report tramite Expo</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><span class="ico">💳</span><h2>Pagamenti</h2></div>
+    <p>Piani disponibili: <strong>Free</strong>, <strong>Pro</strong> e <strong>Family</strong>.</p>
+    <p>Utilizziamo i token di <strong>Google Play Billing</strong>. <strong>Non memorizziamo mai dati della carta di credito</strong>: il pagamento è interamente processato da Google Play.</p>
+  </section>
+
+  <div class="paw-divider">🐾 🐾 🐾</div>
+
+  <div class="section-label">Come usiamo i dati</div>
+
+  <section class="card">
+    <div class="card-head"><span class="ico">🎯</span><h2>Finalità del trattamento</h2></div>
+    <ul class="bullets">
+      <li>GPS attivo solo durante le passeggiate avviate</li>
+      <li>Promemoria di salute (vaccini, antiparassitari)</li>
+      <li>Gestione dell'abbonamento</li>
+      <li>Miglioramento continuo dell'app</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><span class="ico">🤝</span><h2>Condivisione dei dati</h2></div>
+    <p>I tuoi dati sono condivisi <strong>solo</strong> con i seguenti fornitori necessari:</p>
+    <ul class="bullets">
+      <li><strong>Supabase</strong> — database dell'applicazione</li>
+      <li><strong>Google Play Billing</strong> — gestione abbonamenti</li>
+      <li><strong>Vercel</strong> — API backend (traffico cifrato)</li>
+    </ul>
+    <p><strong>Non vendiamo mai i tuoi dati.</strong></p>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><span class="ico">⏳</span><h2>Conservazione</h2></div>
+    <ul class="bullets">
+      <li>I dati restano conservati fino alla cancellazione dell'account</li>
+      <li>I dati GPS delle passeggiate sono eliminabili</li>
+      <li>L'account viene eliminato su tua richiesta</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><span class="ico">📍</span><h2>Posizione GPS</h2></div>
+    <p>Il GPS è utilizzato <strong>solo in foreground</strong> e <strong>solo durante le passeggiate attive</strong>. Non raccogliamo posizione in background e non la usiamo mai per advertising o analytics.</p>
+  </section>
+
+  <div class="paw-divider">🐾 🐾 🐾</div>
+
+  <div class="section-label">I tuoi diritti</div>
+
+  <section class="card featured">
+    <div class="card-head"><span class="ico">⭐</span><h2>Diritti GDPR (UE 2016/679)</h2></div>
+    <p>Hai diritto di:</p>
+    <ul class="bullets">
+      <li><strong>Accesso</strong> ai tuoi dati</li>
+      <li><strong>Rettifica</strong> dei dati non corretti</li>
+      <li><strong>Cancellazione</strong> (diritto all'oblio)</li>
+      <li><strong>Portabilità</strong> dei dati</li>
+      <li><strong>Opposizione</strong> al trattamento</li>
+    </ul>
+    <p>Tutti i diritti sono esercitabili scrivendo a <strong>amzajaguar@gmail.com</strong>.</p>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><span class="ico">🧒</span><h2>Minori</h2></div>
+    <p>L'app <strong>non è rivolta a minori di 13 anni</strong>. Non raccogliamo consapevolmente dati di minori.</p>
+  </section>
+
+  <section class="card">
+    <div class="card-head"><span class="ico">🔄</span><h2>Modifiche all'informativa</h2></div>
+    <p>Eventuali modifiche saranno pubblicate in questa pagina con la data di aggiornamento riportata in alto.</p>
+  </section>
+
+  <!-- 6. Second contact hero -->
+  <section class="hero">
+    <span class="eyebrow">Domande sulla privacy?</span>
+    <h1>Contatta il titolare</h1>
+    <span class="emoji">🐕</span>
+    <p>Scrivici per esercitare i tuoi diritti GDPR, richiedere la cancellazione o semplicemente saperne di più.</p>
+    <a class="cta" href="mailto:amzajaguar@gmail.com">✉️ amzajaguar@gmail.com</a>
+  </section>
+
+</div>
+
+<!-- 7. Bottom tab bar -->
+<nav class="tabbar" aria-label="Navigazione principale">
+  <a href="#" aria-label="Home"><span class="tab-ico">🏠</span>Home</a>
+  <a href="#" aria-label="Profilo"><span class="tab-ico">🐾</span>Profilo</a>
+  <a href="#" aria-label="Salute"><span class="tab-ico">💚</span>Salute</a>
+  <a href="#" aria-label="Mappa"><span class="tab-ico">🗺️</span>Mappa</a>
+  <a href="#" class="active" aria-label="Impostazioni"><span class="tab-ico">⚙️</span>Impost.</a>
+</nav>
+
+</body>
+</html>
