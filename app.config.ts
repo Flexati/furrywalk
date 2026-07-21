@@ -1,5 +1,6 @@
 // Package ID: furry.walk.dog — Play Store-registered identifier
 import type { ExpoConfig } from "expo/config";
+import { withProjectBuildGradle } from "@expo/config-plugins";
 
 const bundleId = "furry.walk.dog";
 const env = {
@@ -173,4 +174,31 @@ const config: ExpoConfig = {
   },
 };
 
-export default config;
+// Inject kotlinVersion into root build.gradle so third-party libs (e.g.
+// react-native-google-mobile-ads) that use getExtOrDefault('kotlinVersion', '1.8.22')
+// get the correct Kotlin 2.1.20 instead of hardcoded 1.8.22 — avoids binary-incompatible
+// kotlin plugin conflict with React Native 0.81 (which uses libs.versions.toml + Kotlin 2.1.20).
+function withKotlinVersionFix(config: ExpoConfig): ExpoConfig {
+  return withProjectBuildGradle(config, (c) => {
+    if (!c.modResults.contents.includes("ext.kotlinVersion")) {
+      // Inject before the first subproject() call or after ext block
+      if (/ext\s*\{/.test(c.modResults.contents)) {
+        c.modResults.contents = c.modResults.contents.replace(
+          /ext\s*\{[^}]*\}/,
+          (match) => match.replace(/\n\}$/, '\n    kotlinVersion = "2.1.20"\n}')
+        );
+      } else {
+        // No ext block — prepend one before subprojects
+        c.modResults.contents = c.modResults.contents.replace(
+          /subprojects\s*\(/,
+          'ext {\n  kotlinVersion = "2.1.20"\n}\n\nsubprojects('
+        );
+      }
+    }
+    return c;
+  });
+}
+
+// Wrap config with kotlin fix, export as default
+const finalConfig: ExpoConfig = withKotlinVersionFix(config);
+export default finalConfig;
