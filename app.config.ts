@@ -58,6 +58,7 @@ const config: ExpoConfig = {
       "WRITE_EXTERNAL_STORAGE",
       "VIBRATE",
       "INTERNET",
+      "com.google.android.gms.permission.AD_ID",
     ],
     blockedPermissions: [
       "android.permission.USE_BIOMETRIC",
