@@ -180,20 +180,22 @@ const config: ExpoConfig = {
 // kotlin plugin conflict with React Native 0.81 (which uses libs.versions.toml + Kotlin 2.1.20).
 function withKotlinVersionFix(config: ExpoConfig): ExpoConfig {
   return withProjectBuildGradle(config, (c) => {
-    if (!c.modResults.contents.includes("ext.kotlinVersion")) {
-      // Inject before the first subproject() call or after ext block
-      if (/ext\s*\{/.test(c.modResults.contents)) {
-        c.modResults.contents = c.modResults.contents.replace(
-          /ext\s*\{[^}]*\}/,
-          (match) => match.replace(/\n\}$/, '\n    kotlinVersion = "2.1.20"\n}')
-        );
-      } else {
-        // No ext block — prepend one before subprojects
-        c.modResults.contents = c.modResults.contents.replace(
-          /subprojects\s*\(/,
-          'ext {\n  kotlinVersion = "2.1.20"\n}\n\nsubprojects('
-        );
-      }
+    if (c.modResults.contents.includes("ext.kotlinVersion")) return c;
+    const kotlinBlock = 'ext {\n  kotlinVersion = "2.1.20"\n}\n\n';
+    const contents = c.modResults.contents;
+    if (/ext\s*\{/.test(contents)) {
+      // Append to existing ext block
+      c.modResults.contents = contents.replace(
+        /(ext\s*\{[^}]*?)(\})/,
+        (m, open, close) => `${open}\n    kotlinVersion = "2.1.20"\n${close}`
+      );
+    } else if (/subprojects\s*\(/.test(contents)) {
+      c.modResults.contents = contents.replace(/(subprojects\s*\()/i, `${kotlinBlock}$1`);
+    } else if (/allprojects\s*\{/.test(contents)) {
+      c.modResults.contents = contents.replace(/(allprojects\s*\{)/i, `${kotlinBlock}$1`);
+    } else {
+      // Last resort: append at end
+      c.modResults.contents = contents + "\n" + kotlinBlock;
     }
     return c;
   });
