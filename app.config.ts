@@ -58,6 +58,7 @@ const config: ExpoConfig = {
       "WRITE_EXTERNAL_STORAGE",
       "VIBRATE",
       "INTERNET",
+      "com.google.android.gms.permission.AD_ID",
     ],
     blockedPermissions: [
       "android.permission.USE_BIOMETRIC",
@@ -122,6 +123,20 @@ const config: ExpoConfig = {
           enableMinifyInReleaseBuilds: false,
           enableShrinkResourcesInReleaseBuilds: false,
         },
+      },
+    ],
+    [
+      "react-native-google-mobile-ads",
+      {
+        // Test App ID provided by Google — safe for internal testing.
+        // Prod replacement (production build): replace with real AdMob App ID
+        // from https://apps.admob.com → Add app → furry.walk.dog
+        // Publisher account: pub-8156953772676654
+        androidAppId: "ca-app-pub-3940256099942544~3347511713",
+        // iOS test App ID (for future iOS releases)
+        iosAppId: "ca-app-pub-3940256099942544~1458002511",
+        // Explicitly request AD_ID permission (Android 13+)
+        userTrackingUsageReason: "Passeggiata Furba usa l'ID pubblicità per mostrare annunci pertinenti nel piano gratuito.",
       },
     ],
     [
