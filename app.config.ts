@@ -1,6 +1,5 @@
 // Package ID: furry.walk.dog — Play Store-registered identifier
 import type { ExpoConfig } from "expo/config";
-import { withProjectBuildGradle } from "@expo/config-plugins";
 
 const bundleId = "furry.walk.dog";
 const env = {
@@ -42,7 +41,7 @@ const config: ExpoConfig = {
     package: env.androidPackage,
     // Incrementato manualmente per ogni release Play Console.
     // CI workflow --version-code NON sovrascrive app.config.ts → hardcoded.
-    versionCode: 11,
+    versionCode: 12,
     // Note: REMOVED RECORD_AUDIO, FOREGROUND_SERVICE_MEDIA_PLAYBACK, BILLING
     // (last 3 entries previously here) — Play Console started requesting a
     // video demo for FOREGROUND_SERVICE_MEDIA_PLAYBACK because the app does
@@ -127,20 +126,6 @@ const config: ExpoConfig = {
       },
     ],
     [
-      "react-native-google-mobile-ads",
-      {
-        // Test App ID provided by Google — safe for internal testing.
-        // Prod replacement (production build): replace with real AdMob App ID
-        // from https://apps.admob.com → Add app → furry.walk.dog
-        // Publisher account: pub-8156953772676654
-        androidAppId: "ca-app-pub-3940256099942544~3347511713",
-        // iOS test App ID (for future iOS releases)
-        iosAppId: "ca-app-pub-3940256099942544~1458002511",
-        // Explicitly request AD_ID permission (Android 13+)
-        userTrackingUsageReason: "Passeggiata Furba usa l'ID pubblicità per mostrare annunci pertinenti nel piano gratuito.",
-      },
-    ],
-    [
       "expo-location",
       {
         locationAlwaysAndWhenInUsePermission:
@@ -174,24 +159,4 @@ const config: ExpoConfig = {
   },
 };
 
-// Inject kotlinVersion into root build.gradle so third-party libs (e.g.
-// react-native-google-mobile-ads) that use getExtOrDefault('kotlinVersion', '1.8.22')
-// get the correct Kotlin 2.1.20 instead of hardcoded 1.8.22 — avoids binary-incompatible
-// kotlin plugin conflict with React Native 0.81 (which uses libs.versions.toml + Kotlin 2.1.20).
-// Strategy: prepend `ext { kotlinVersion = "2.1.20" }` at the TOP of build.gradle.
-// This directly sets rootProject.ext.kotlinVersion, which is what AdMob's buildscript reads.
-// We cannot rely on gradle.properties because RN 0.81 template may use libs.versions.toml
-// exclusively (the findProperty('android.kotlinVersion') pattern is SDK 52-only).
-function withKotlinVersionFix(config: ExpoConfig): ExpoConfig {
-  return withProjectBuildGradle(config, (c) => {
-    if (c.modResults.contents.includes("ext.kotlinVersion")) return c;
-    c.modResults.contents =
-      'ext {\n  kotlinVersion = "2.1.20" // injected by withKotlinVersionFix — required by AdMob SDK\n}\n\n' +
-      c.modResults.contents;
-    return c;
-  });
-}
-
-// Wrap config with kotlin fix, export as default
-const finalConfig: ExpoConfig = withKotlinVersionFix(config);
-export default finalConfig;
+export default config;
