@@ -178,25 +178,16 @@ const config: ExpoConfig = {
 // react-native-google-mobile-ads) that use getExtOrDefault('kotlinVersion', '1.8.22')
 // get the correct Kotlin 2.1.20 instead of hardcoded 1.8.22 — avoids binary-incompatible
 // kotlin plugin conflict with React Native 0.81 (which uses libs.versions.toml + Kotlin 2.1.20).
+// Strategy: prepend `ext { kotlinVersion = "2.1.20" }` at the TOP of build.gradle.
+// This directly sets rootProject.ext.kotlinVersion, which is what AdMob's buildscript reads.
+// We cannot rely on gradle.properties because RN 0.81 template may use libs.versions.toml
+// exclusively (the findProperty('android.kotlinVersion') pattern is SDK 52-only).
 function withKotlinVersionFix(config: ExpoConfig): ExpoConfig {
   return withProjectBuildGradle(config, (c) => {
     if (c.modResults.contents.includes("ext.kotlinVersion")) return c;
-    const kotlinBlock = 'ext {\n  kotlinVersion = "2.1.20"\n}\n\n';
-    const contents = c.modResults.contents;
-    if (/ext\s*\{/.test(contents)) {
-      // Append to existing ext block
-      c.modResults.contents = contents.replace(
-        /(ext\s*\{[^}]*?)(\})/,
-        (m, open, close) => `${open}\n    kotlinVersion = "2.1.20"\n${close}`
-      );
-    } else if (/subprojects\s*\(/.test(contents)) {
-      c.modResults.contents = contents.replace(/(subprojects\s*\()/i, `${kotlinBlock}$1`);
-    } else if (/allprojects\s*\{/.test(contents)) {
-      c.modResults.contents = contents.replace(/(allprojects\s*\{)/i, `${kotlinBlock}$1`);
-    } else {
-      // Last resort: append at end
-      c.modResults.contents = contents + "\n" + kotlinBlock;
-    }
+    c.modResults.contents =
+      'ext {\n  kotlinVersion = "2.1.20" // injected by withKotlinVersionFix — required by AdMob SDK\n}\n\n' +
+      c.modResults.contents;
     return c;
   });
 }
