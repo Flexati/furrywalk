@@ -41,7 +41,7 @@ const config: ExpoConfig = {
     package: env.androidPackage,
     // Incrementato manualmente per ogni release Play Console.
     // CI workflow --version-code NON sovrascrive app.config.ts → hardcoded.
-    versionCode: 12,
+    versionCode: 13,
     // Note: REMOVED RECORD_AUDIO, FOREGROUND_SERVICE_MEDIA_PLAYBACK, BILLING
     // (last 3 entries previously here) — Play Console started requesting a
     // video demo for FOREGROUND_SERVICE_MEDIA_PLAYBACK because the app does
@@ -123,6 +123,17 @@ const config: ExpoConfig = {
           enableMinifyInReleaseBuilds: false,
           enableShrinkResourcesInReleaseBuilds: false,
         },
+      },
+    ],
+    [
+      "react-native-google-mobile-ads",
+      {
+        // Google official TEST App ID — safe for internal testing.
+        // Prod replacement: AdMob dashboard → register furry.walk.dog → real App ID.
+        // Publisher: pub-8156953772676654
+        androidAppId: "ca-app-pub-3940256099942544~3347511713",
+        iosAppId: "ca-app-pub-3940256099942544~1458002511",
+        userTrackingUsageReason: "Passeggiata Furba usa l'ID pubblicità per mostrare annunci pertinenti nel piano gratuito.",
       },
     ],
     [
