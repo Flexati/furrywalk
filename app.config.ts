@@ -69,7 +69,6 @@ const config: ExpoConfig = {
       "android.permission.DUMP",
       "android.permission.READ_APP_BADGE",
       "android.permission.RECEIVE_BOOT_COMPLETED",
-      "com.android.vending.BILLING",
     ],
     intentFilters: [
       {
