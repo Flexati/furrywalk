@@ -1,0 +1,37 @@
+--- a/node_modules/react-native-google-mobile-ads/android/build.gradle
++++ b/node_modules/react-native-google-mobile-ads/android/build.gradle
+@@ -1,29 +1,3 @@
+ import io.invertase.gradle.common.PackageJson
+
+-buildscript {
+-  ext.getExtOrDefault = {name, version ->
+-    return rootProject.ext.has(name) ? rootProject.ext.get(name) : version
+-  }
+-
+-  // The Android Gradle plugin is only required when opening the android folder stand-alone.
+-  // This avoids unnecessary downloads and potential conflicts when the library is included as a
+-  // module dependency in an application project.
+-  if (project == rootProject) {
+-    repositories {
+-      google()
+-      mavenCentral()
+-    }
+-
+-    dependencies {
+-      classpath("com.android.tools.build:gradle:7.0.4")
+-      classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${getExtOrDefault('kotlinVersion', '1.8.22')}"
+-    }
+-  } else {
+-    repositories {
+-      mavenCentral()
+-    }
+-
+-    dependencies {
+-      classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:${getExtOrDefault('kotlinVersion', '1.8.22')}"
+-    }
+-  }
+-}
+-
+ plugins {
+   id "io.invertase.gradle.build" version "1.5"
+ }
