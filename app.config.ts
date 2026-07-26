@@ -121,6 +121,22 @@ const config: ExpoConfig = {
           // Re-enable once keep rules are validated; AAB is larger but builds.
           enableMinifyInReleaseBuilds: false,
           enableShrinkResourcesInReleaseBuilds: false,
+          // Override transitive Android dependencies to keep Kotlin metadata
+          // version below 2.1.0 (Expo SDK 54 + RN 0.81 use Kotlin 2.1.20, but
+          // play-services-ads 25.4.0 ships Kotlin metadata 2.3.0 → binary
+          // incompatibility → compileReleaseKotlin FAILED).
+          dependencies: [
+            {
+              group: "com.google.android.gms",
+              artifact: "play-services-ads",
+              version: "24.0.0",
+            },
+            {
+              group: "com.google.android.ump",
+              artifact: "user-messaging-platform",
+              version: "2.1.0",
+            },
+          ],
         },
       },
     ],
